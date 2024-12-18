@@ -160,6 +160,11 @@ export default function Stats() {
           icon={<Award className="h-6 w-6 text-purple-500" />}
           color="bg-gradient-to-br from-purple-400 to-pink-500"
         />
+        {/* 
+        total swaps
+        total bridges
+        total transactions
+         */}
         <StatCard
           title="Current Streak"
           value={`${mock_data.stats?.currentStreak ?? 0} days`}
