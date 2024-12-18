@@ -1,50 +1,58 @@
-import { Connection, PublicKey } from "@solana/web3.js";
+import { ConfirmedSignatureInfo, Connection, PublicKey } from "@solana/web3.js";
+import { provider } from "./data";
 
-export async function getSignatures(address: string) {
-  let oldestSignature;
-
-  const dates: number[] = [];
+export async function getSignatures(
+  address: string
+): Promise<ConfirmedSignatureInfo[]> {
+  let signatures: ConfirmedSignatureInfo[] = [];
 
   const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
   const oneYearAgo = Math.floor(Date.now() / 1000) - ONE_YEAR_IN_SECONDS;
-  const provider = new Connection("https://mainnet.helius-rpc.com/?api-key=");
+ 
+  let oldestSignature: string | undefined;
+  // 20
   while (true) {
     try {
-      const signatures = await provider.getSignaturesForAddress(
+      const newSignatures = await provider.getSignaturesForAddress(
         new PublicKey(address),
         {
           before: oldestSignature,
           limit: 1000,
         }
       );
-      if (signatures.length === 0) break;
+
+      console.log(`Fetched ${newSignatures.length} signatures`);
+      if (newSignatures.length === 0) break;
 
       let stopLoop = false;
 
-      for (const sig of signatures) {
-        if (sig.blockTime) {
-          if (sig.blockTime < oneYearAgo) {
+      for (const sig of newSignatures) {
+        if (sig.err === null) {
+          if (sig.blockTime! < oneYearAgo) {
             stopLoop = true;
             break;
           }
-          dates.push(sig.blockTime);
+          signatures.push(sig);
         }
       }
 
-      if (stopLoop) break;
-      oldestSignature = signatures[signatures.length - 1].signature;
+      oldestSignature = newSignatures[newSignatures.length - 1]?.signature;
 
-      // Add a delay of 1 second between requests
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (stopLoop) break;
+
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (err) {
-      console.log(err);
+      console.error("Error fetching signatures:", err);
       break;
     }
   }
-  return processDates(dates);
+
+  return signatures;
+  // const sign = await provider.getSignaturesForAddress(new PublicKey(address));
+  // return sign;
 }
 
-function processDates(dates: number[]) {
+export function processDates(dates: number[]) {
   const groupedDates = dates.reduce((acc: { [key: string]: number }, date) => {
     const formattedDate = epochToDate(date);
     acc[formattedDate] = (acc[formattedDate] || 0) + 1;

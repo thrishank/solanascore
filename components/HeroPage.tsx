@@ -2,10 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import useAddressStore from "@/lib/address";
-import useDashboardStore from "@/lib/page";
+import useAddressStore from "@/state/address";
+import useDashboardStore from "@/state/page";
 import { PublicKey } from "@solana/web3.js";
-import { resolveDomain } from "@/lib/domain";
 
 export default function HeroPage() {
   const [showManualInput, setShowManualInput] = useState(false);
@@ -24,24 +23,6 @@ export default function HeroPage() {
       (address) => address.trim() !== ""
     );
     const validAddresses: string[] = [];
-
-    for (const address of filteredAddresses) {
-      try {
-        const publicKey = new PublicKey(address);
-        validAddresses.push(publicKey.toString());
-      } catch {
-        try {
-          const resolvedKey = await resolveDomain(address);
-          if (resolvedKey) {
-            validAddresses.push(resolvedKey);
-          } else {
-            console.warn(`Invalid domain or public key: ${address}`);
-          }
-        } catch (error) {
-          console.error(`Error processing address: ${address}`, error);
-        }
-      }
-    }
 
     setAddress(validAddresses);
     setShowDashboard(true);

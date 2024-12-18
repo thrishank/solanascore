@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import ContributionGraph from "./ContributionGraph";
-import useAddressStore from "@/lib/address";
+import useAddressStore from "@/state/address";
 import { useEffect, useState } from "react";
 import { getSignatures } from "@/lib/sign";
 import { Loader2 } from "lucide-react";

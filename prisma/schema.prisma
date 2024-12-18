@@ -1,0 +1,26 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model WalletData {
+  address            String  @id
+  uniqueDays         Int
+  longestStreak      Int
+  currentStreak      Int
+  longestStreakDates String?
+  currentStreakDates String?
+  fee                BigInt
+  totalTransactions  Int
+  programId          String
+  txData             String
+  tokens             String
+  hasDomain          Boolean
+}

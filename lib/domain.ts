@@ -1,17 +1,17 @@
-import { TldParser } from "@onsol/tldparser";
-import { Connection } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
+import { getAllDomains, reverseLookup } from "@bonfida/spl-name-service";
+import { provider } from "./data";
 
-const RPC_URL = "https://api.devnet.solana.com";
-
-const connection = new Connection(RPC_URL);
-
-export async function resolveDomain(domain: string): Promise<string | null> {
-  try {
-    const parser = new TldParser(connection);
-    const owner = await parser.getOwnerFromDomainTld(domain);
-    return owner?.toString() || null;
-  } catch (error) {
-    console.error(`Failed to resolve domain: ${domain}`, error);
-    return null;
-  }
+export async function getDomains(wallet: string): Promise<boolean> {
+  console.log("domain functin calling")
+  const ownerWallet = new PublicKey(wallet);
+  const allDomainKeys = await getAllDomains(provider, ownerWallet);
+  const hasDomain = await Promise.any(
+    allDomainKeys.map(async (key) => {
+      await reverseLookup(provider, key);
+      return true;
+    })
+  ).catch(() => false);
+  console.log(`${wallet} owns at least one SNS domain: ${hasDomain}`);
+  return hasDomain;
 }
