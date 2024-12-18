@@ -11,6 +11,7 @@ export interface StreakAnalysis {
     end: string;
   };
   counts: Record<number, number>;
+  dayCount: { date: string; count: number }[];
 }
 
 export function analyzeTransactionStreaks(
@@ -22,6 +23,7 @@ export function analyzeTransactionStreaks(
       uniqueDays: 0,
       longestStreak: 0,
       currentStreak: 0,
+      dayCount: [],
     };
   }
 
@@ -29,80 +31,80 @@ export function analyzeTransactionStreaks(
     (ts) => new Date(ts * 1000).toISOString().split("T")[0]
   );
   const uniqueDays = new Set(dates).size;
-  const sortedUniqueDates = Array.from(new Set(dates)).sort().reverse();
+  const sortedUniqueDates = Array.from(new Set(dates)).sort();
   const sortedDates = sortedUniqueDates.map((date) => new Date(date));
 
   let currentStreak = 0;
   let currentStreakDates: { start: string; end: string } | undefined;
-  for (let i = 0; i < sortedDates.length; i++) {
-    if (i === 0) {
-      currentStreak = 1;
-      currentStreakDates = {
-        start: sortedDates[i].toISOString().split("T")[0],
-        end: sortedDates[i].toISOString().split("T")[0],
-      };
-    } else {
-      const dayDifference =
-        (sortedDates[i - 1].getTime() - sortedDates[i].getTime()) /
-        (1000 * 3600 * 24);
-
-      if (dayDifference === 1) {
-        currentStreak++;
-        currentStreakDates!.start = sortedDates[i].toISOString().split("T")[0];
-      } else {
-        if (currentStreak === 1) {
-          currentStreakDates!.end = currentStreakDates!.start;
-        }
-        break;
-      }
-    }
-  }
-
   let longestStreak = 0;
-  let currentPotentialStreak = 1;
   let longestStreakDates: { start: string; end: string } | undefined;
-  let currentStreakStartDate = sortedDates[0];
-  let currentStreakEndDate = sortedDates[0];
+
+  let tempStreak = 1;
+  let tempStart = sortedDates[0];
+  let tempEnd = sortedDates[0];
 
   for (let i = 1; i < sortedDates.length; i++) {
     const dayDifference =
-      (sortedDates[i - 1].getTime() - sortedDates[i].getTime()) /
+      (sortedDates[i].getTime() - sortedDates[i - 1].getTime()) /
       (1000 * 3600 * 24);
 
     if (dayDifference === 1) {
-      currentPotentialStreak++;
-      currentStreakEndDate = sortedDates[i - 1];
+      tempStreak++;
+      tempEnd = sortedDates[i];
     } else {
-      if (currentPotentialStreak > longestStreak) {
-        longestStreak = currentPotentialStreak;
+      if (tempStreak > longestStreak) {
+        longestStreak = tempStreak;
         longestStreakDates = {
-          start: currentStreakStartDate.toISOString().split("T")[0],
-          end: currentStreakEndDate.toISOString().split("T")[0],
+          start: tempStart.toISOString().split("T")[0],
+          end: tempEnd.toISOString().split("T")[0],
         };
       }
-      currentPotentialStreak = 1;
-      currentStreakStartDate = sortedDates[i];
-      currentStreakEndDate = sortedDates[i];
+      tempStreak = 1;
+      tempStart = sortedDates[i];
     }
   }
 
-  if (currentPotentialStreak > longestStreak) {
-    longestStreak = currentPotentialStreak;
+  // Handle the case where the longest streak ends with the last date
+  if (tempStreak > longestStreak) {
+    longestStreak = tempStreak;
     longestStreakDates = {
-      start: currentStreakStartDate.toISOString().split("T")[0],
-      end: sortedDates[sortedDates.length - 1].toISOString().split("T")[0],
+      start: tempStart.toISOString().split("T")[0],
+      end: tempEnd.toISOString().split("T")[0],
+    };
+  }
+
+  // Calculate the current streak
+  const today = new Date();
+  const lastDate = sortedDates[sortedDates.length - 1];
+  const daysSinceLast =
+    (today.getTime() - lastDate.getTime()) / (1000 * 3600 * 24);
+
+  if (daysSinceLast <= 1) {
+    currentStreak = tempStreak;
+    currentStreakDates = {
+      start: tempStart.toISOString().split("T")[0],
+      end: tempEnd.toISOString().split("T")[0],
     };
   }
 
   const counts: Record<number, number> = {};
+  const dayCount: { date: string; count: number }[] = [];
+
   timestamps.forEach((ts) => {
-    const date = new Date(ts * 1000);
-    const month = date.getMonth() + 1;
+    const date = new Date(ts * 1000).toISOString().split("T")[0];
+    const month = new Date(ts * 1000).getMonth() + 1;
 
     if (!counts[month]) {
       counts[month] = 0;
     }
     counts[month]++;
+
+    const dayEntry = dayCount.find((entry) => entry.date === date);
+    if (dayEntry) {
+      dayEntry.count++;
+    } else {
+      dayCount.push({ date, count: 1 });
+    }
   });
 
   return {
@@ -112,5 +114,6 @@ export function analyzeTransactionStreaks(
     longestStreakDates,
     currentStreakDates,
     counts,
+    dayCount,
   };
 }

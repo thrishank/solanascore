@@ -7,8 +7,6 @@ import {
 import { provider } from "./data";
 
 export async function getTokens(address: string) {
-  console.log("getTokens function calling");
-  // limit 35
   const tokenAccounts = await  provider.getTokenAccountsByOwner(
     new PublicKey(address),
     {

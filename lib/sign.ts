@@ -52,23 +52,4 @@ export async function getSignatures(
   // return sign;
 }
 
-export function processDates(dates: number[]) {
-  const groupedDates = dates.reduce((acc: { [key: string]: number }, date) => {
-    const formattedDate = epochToDate(date);
-    acc[formattedDate] = (acc[formattedDate] || 0) + 1;
-    return acc;
-  }, {});
-
-  return Object.entries(groupedDates).map(([date, count]) => ({
-    date,
-    count,
-  }));
-}
-
-function epochToDate(timestamp: number) {
-  const date = new Date(timestamp * 1000);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}/${month}/${day}`;
-}
+ 

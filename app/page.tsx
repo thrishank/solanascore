@@ -2,7 +2,7 @@
 
 import { ThemeProvider } from 'next-themes'
 import HeroPage from '@/components/HeroPage'
-import StatsDashboard from '@/components/StatsDashboard'
+import Stats from '@/components/Stats'
 import useDashboardStore from '@/state/page'
 import useAddressStore from '@/state/address'
 import { PublicKey } from '@solana/web3.js'
@@ -53,12 +53,12 @@ export default function SolanaAnalytics() {
           </WalletMultiButton>
         </div>
         <div className="w-full max-w-4xl p-4 flex justify-center">
-          {!showDashboard ? (
+          {/* {!showDashboard ? (
             <HeroPage />
           ) : (
             <StatsDashboard />
-          )}
-          {/* <StatsDashboard /> */}
+          )} */}
+          <Stats />
         </div>
       </div>
     </ThemeProvider>

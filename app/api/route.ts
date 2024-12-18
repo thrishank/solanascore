@@ -16,7 +16,9 @@ interface txData {
 const primsa = new PrismaClient();
 
 export async function GET(req: Request) {
-  const address = "EXBdeRCdiNChKyD7akt64n9HgSXEpUtpPEhmbnm4L6iH";
+  const url = new URL(req.url);
+  const address = url.searchParams.get("address")!;
+  
   const startTime = Date.now();
   try {
     const signatures = await getSignatures(address);
