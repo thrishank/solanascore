@@ -12,7 +12,7 @@ export default function onchainScore(
   let score = 0;
   score += days_score(stats, txCount); // 50
   score += programs_score(programIdCountMap); // 25
-  score += token_score(tokens) // 10
+  score += token_score(tokens); // 10
   return score;
 }
 
@@ -34,7 +34,7 @@ function programs_score(program_data: ProgramIdDetailedCount[]): number {
       }
     }
   });
-  let score =
+  const score =
     programScore.jupiter +
     programScore.tensor +
     programScore.squads +
@@ -46,13 +46,13 @@ function programs_score(program_data: ProgramIdDetailedCount[]): number {
 
 function days_score(stats: StreakAnalysis, totaltx: number): number {
   // Weighted scoring for unique active days
-  let uniqueDaysScore = Math.min(
+  const uniqueDaysScore = Math.min(
     20,
     Math.log2(stats.uniqueDays + 1) * 4 // Logarithmic scaling
   );
 
   // Exponential scoring for longest streak
-  let streakScore = Math.min(
+  const streakScore = Math.min(
     10,
     (Math.exp(stats.longestStreak / 50) - 1) * 2 // Exponential scaling
   );
@@ -88,13 +88,13 @@ function days_score(stats: StreakAnalysis, totaltx: number): number {
   let consistencyBonus = Math.max(0, 5 - stdDev); // Up to 5 points for lower variability
 
   // Total transactions scoring (new feature)
-  let totalTxScore = Math.min(
+  const totalTxScore = Math.min(
     5,
     Math.log2(totaltx + 1) // Logarithmic scaling for total transactions
   );
 
   // Calculate total score (max 50 points)
-  let totalScore = Math.min(
+  const totalScore = Math.min(
     50,
     uniqueDaysScore +
       streakScore +
@@ -103,26 +103,27 @@ function days_score(stats: StreakAnalysis, totaltx: number): number {
       totalTxScore
   );
 
-  console.log("Scores Breakdown:");
-  console.log("Unique Days Score:", uniqueDaysScore);
-  console.log("Longest Streak Score:", streakScore);
-  console.log("Monthly Transaction Score:", monthlyTxScore);
-  console.log("Consistency Bonus:", consistencyBonus);
-  console.log("Total Transactions Score:", totalTxScore);
-  console.log("Total Score:", totalScore);
-
   return Math.floor(totalScore);
 }
 
 function token_score(tokens: RawAccount[]): number {
   let score = 0;
-  let lst_check = false, stable_coin_check = false;
+  let lst_check = false,
+    stable_coin_check = false;
   for (let i = 0; i < tokens.length; i++) {
-    if(lst_check && stable_coin_check) break;
-    if (lst_tokens.includes(tokens[i].mint.toString()) && tokens[i].amount !== BigInt(0)) lst_check = true;
-    if(stable_coins.includes(tokens[i].mint.toString()) && tokens[i].amount !== BigInt(0)) stable_coin_check = true;
+    if (lst_check && stable_coin_check) break;
+    if (
+      lst_tokens.includes(tokens[i].mint.toString()) &&
+      tokens[i].amount !== BigInt(0)
+    )
+      lst_check = true;
+    if (
+      stable_coins.includes(tokens[i].mint.toString()) &&
+      tokens[i].amount !== BigInt(0)
+    )
+      stable_coin_check = true;
   }
-  if(lst_check) score += 5;
-  if(stable_coin_check) score += 5;
+  if (lst_check) score += 5;
+  if (stable_coin_check) score += 5;
   return score;
 }

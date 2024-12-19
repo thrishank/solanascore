@@ -1,154 +1,59 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useAddressStore from "@/state/address";
 import useDashboardStore from "@/state/page";
 import { PublicKey } from "@solana/web3.js";
 
-export default function HeroPage() {
-  const [showManualInput, setShowManualInput] = useState(false);
+export default function Hero() {
+  const [showinput, setShowinput] = useState(false);
   const { address, setAddress } = useAddressStore();
-  const { setShowDashboard } = useDashboardStore();
-
-  const handleAddressChange = (index: number, value: string) => {
-    const newAddresses = [...address];
-    newAddresses[index] = value;
-    setAddress(newAddresses);
-  };
-
-  const handleManualSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const filteredAddresses = address.filter(
-      (address) => address.trim() !== ""
-    );
-    const validAddresses: string[] = [];
-
-    setAddress(validAddresses);
-    setShowDashboard(true);
-  };
+  const {  setShowDashboard } = useDashboardStore();
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="container mx-auto px-4 py-16 text-center"
-    >
-      <p className="text-xl md:text-2xl mb-6 text-purple-300 dark:text-purple-700">
-        Uncover your Solana journey in a whole new light
-      </p>
-      <p className="text-lg md:text-xl mb-12 text-teal-300 dark:text-teal-700">
-        Dive into your on-chain activity and discover fascinating insights
-      </p>
-      <div className="space-y-8">
-        <div className="inline-block w-auto">
-          <div
-            onClick={() => setShowManualInput(!showManualInput)}
-            className="bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-200 dark:hover:bg-teal-300 dark:text-teal-900 py-3 rounded-full text-lg transition-all duration-300 cursor-pointer px-6 inline-block"
-          >
-            Enter Manually
-          </div>
+    <main className="container max-w-screen-xl mx-auto px-4 py-16">
+      <div className="max-w-4xl mx-auto space-y-12">
+        <h1 className="text-8xl font-normal text-center">Are you onchain?</h1>
+
+        <div className="text-center space-y-1">
+          <p className="text-xl text-[#4F46E5]">
+            Connect your wallet or{" "}
+            <a
+              href="#"
+              className="font-bold underline"
+              onClick={() => setShowinput(!showinput)}
+            >
+              enter manually
+            </a>{" "}
+            to assess onchain-nativeness
+          </p>
         </div>
-        {showManualInput && (
-          <motion.form
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            onSubmit={handleManualSubmit}
-            className="space-y-4 max-w-md mx-auto"
-          >
-            <div>
-              <div className="relative">
-                <Input
-                  id="address1"
-                  type="text"
-                  placeholder="Enter Solana wallet address"
-                  value={address[0] || ""}
-                  onChange={(e) => handleAddressChange(0, e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border-2 border-transparent 
-                    bg-white/10 backdrop-blur-sm 
-                    text-white 
-                    placeholder-white/50 
-                    focus:border-teal-500 
-                    focus:ring-2 focus:ring-teal-500/50 
-                    transition-all duration-300 
-                    outline-none"
-                />
-                <div
-                  className="absolute inset-0 rounded-xl pointer-events-none 
-                  border-2 border-white/20 
-                  dark:border-white/10 
-                  opacity-50 
-                  group-focus-within:opacity-100 
-                  transition-all duration-300"
-                ></div>
-              </div>
-            </div>
-            <div>
-              <div className="relative">
-                <Input
-                  id="address2"
-                  type="text"
-                  placeholder="Enter Solana Name Service"
-                  value={address[1] || ""}
-                  onChange={(e) => handleAddressChange(1, e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-transparent 
-                    bg-white/10 backdrop-blur-sm 
-                    text-white 
-                    placeholder-white/50 
-                    focus:border-teal-500 
-                    focus:ring-2 focus:ring-teal-500/50 
-                    transition-all duration-300 
-                    outline-none"
-                />
-                <div
-                  className="absolute inset-0 rounded-xl pointer-events-none 
-                  border-2 border-white/20 
-                  dark:border-white/10 
-                  opacity-50 
-                  group-focus-within:opacity-100 
-                  transition-all duration-300"
-                ></div>
-              </div>
-            </div>
-            <div>
-              <div className="relative">
-                <Input
-                  id="address3"
-                  type="text"
-                  placeholder="372....VQ9j, anatoly.sol"
-                  value={address[2] || ""}
-                  onChange={(e) => handleAddressChange(2, e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-transparent 
-                    bg-white/10 backdrop-blur-sm 
-                    text-white 
-                    placeholder-white/50 
-                    focus:border-teal-500 
-                    focus:ring-2 focus:ring-teal-500/50 
-                    transition-all duration-300 
-                    outline-none"
-                />
-                <div
-                  className="absolute inset-0 rounded-xl pointer-events-none 
-                  border-2 border-white/20 
-                  dark:border-white/10 
-                  opacity-50 
-                  group-focus-within:opacity-100 
-                  transition-all duration-300"
-                ></div>
-              </div>
-            </div>
+
+        {showinput && (
+          <div className="space-y-4 max-w-md mx-auto">
+            <Input
+              placeholder="372a......vq9j"
+              className="h-12 text-lg"
+              onChange={(e) => setAddress([e.target.value])}
+            />
             <Button
-              type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white dark:bg-purple-200 dark:hover:bg-purple-300 dark:text-purple-900 px-8 py-3 rounded-full text-lg transition-all duration-300"
+              className="w-full h-12 text-lg bg-[#4F46E5] hover:bg-[#4F46E5]"
+              onClick={() => {
+                try {
+                  const pubkey = new PublicKey(address[0].trim());
+                  setShowDashboard(true);
+                  setAddress([pubkey.toString()])
+                } catch (error) {
+                  console.error(error);
+                  alert("Please enter a valid Solana address.");
+                }
+              }}
             >
               Submit
             </Button>
-          </motion.form>
+          </div>
         )}
       </div>
-    </motion.div>
+    </main>
   );
 }

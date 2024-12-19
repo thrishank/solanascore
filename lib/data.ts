@@ -126,9 +126,9 @@ export const popular_program_id = {
 };
 
 export const provider = new Connection(
-  "https://young-convincing-patron.solana-mainnet.quiknode.pro/"
+  "https://api.mainnet-beta.solana.com",
 );
-
+ 
 // Jupiter JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4
 // Tensor TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN TCMPhJdwDryooaGtiocG1u3xcYbRpiJzb283XfCZsDp
 // Squads SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu

@@ -1,237 +1,293 @@
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import TxGraph from "./TxGraph";
-import useAddressStore from "@/state/address";
 import { useEffect, useState } from "react";
-import { getSignatures } from "@/lib/sign";
-import { ArrowUpRight, Award, Calendar, Loader2, Zap } from "lucide-react";
-import { mock_data } from "@/thris";
+import TxGraph from "./TxGraph";
+import { Avatar } from "./ui/avatar";
+import { User } from "lucide-react";
+import useAddressStore from "@/state/address";
+import { ResponseData } from "@/app/api/route";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { ProgramIdDetailedCount } from "@/lib/program";
+import { popular_program_id } from "@/lib/data";
 
 export default function Stats() {
-  const [data, setData] = useState<{ date: string; count: number }[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const [data, setData] = useState<ResponseData>();
   const { address } = useAddressStore();
 
-  const computeStats = (data: { date: string; count: number }[]) => {
-    if (!data.length) {
-      return {
-        totalTransactions: 0,
-        activeDays: 0,
-        longestStreak: 0,
-        currentStreak: 0,
-        activityPeriod: 0,
-      };
-    }
-    const sortedData = data
-      .slice()
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const [loading, setLoading] = useState(true);
 
-    const firstDate = new Date(sortedData[0]?.date || Date.now());
-    const lastDate = new Date(
-      sortedData[sortedData.length - 1]?.date || Date.now()
-    );
-
-    if (isNaN(firstDate.getTime()) || isNaN(lastDate.getTime())) {
-      return {
-        totalTransactions: 0,
-        activeDays: 0,
-        longestStreak: 0,
-        currentStreak: 0,
-        activityPeriod: 0,
-      };
-    }
-
-    const activityPeriod = Math.max(
-      Math.ceil(
-        (lastDate.getTime() - firstDate.getTime()) / (1000 * 3600 * 24)
-      ),
-      0
-    );
-    const totalTransactions = data.reduce((sum, day) => sum + day.count, 0);
-    const uniqueDays = new Set(data.map((entry) => entry.date)).size;
-
-    let longestStreak = 0;
-    let currentStreak = 0;
-    let previousDate: Date | null = null;
-
-    for (const entry of data.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    )) {
-      const entryDate = new Date(entry.date);
-      if (
-        previousDate &&
-        entryDate.getTime() - previousDate.getTime() === 86400000
-      ) {
-        currentStreak++;
-        longestStreak = Math.max(longestStreak, currentStreak);
-      } else {
-        currentStreak = 1;
-      }
-      previousDate = entryDate;
-    }
-
-    return {
-      totalTransactions,
-      activeDays: uniqueDays,
-      longestStreak,
-      currentStreak,
-      activityPeriod,
-    };
-  };
-
-  const [stats, setStats] = useState({
-    totalTransactions: 0,
-    activeDays: 0,
-    longestStreak: 0,
-    currentStreak: 0,
-    activityPeriod: 0,
-  });
+ 
 
   useEffect(() => {
     async function fetchData() {
-      if (!address || !address[0]) {
-        console.error("No address provided.");
-        setIsLoading(false);
-        return;
-      }
+      setLoading(true);
       try {
-        setIsLoading(true);
-        const res = await getSignatures(address[0]);
-        setData(res);
-        setStats(computeStats(res));
+        const res = await fetch(`/api?address=${address[0]}`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        const data = await res.json();
+        setData(data);
       } catch (error) {
-        console.error("Failed to fetch signatures:", error);
+        console.error("Error fetching data:", error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     }
-    fetchData();
-  }, [address]);
 
-  if (isLoading) {
+    fetchData();
+  }, []);
+
+  const [fetchedTransactions, setFetchedTransactions] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (loading) {
+      interval = setInterval(() => {
+        setFetchedTransactions((prev) => {
+          const next = prev + 10;
+          return next;
+        });
+      }, 2000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [loading, fetchedTransactions]);
+
+  if (loading) {
     return (
-      <Card className="flex items-center justify-center p-6">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-          <span className="text-gray-600">Loading activity...</span>
-        </div>
-      </Card>
+      <div className="flex flex-col items-center justify-center h-full">
+        <div className="loader animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500"></div>
+        <p className="mt-4 text-lg font-medium animate-pulse">
+          Fetching transactions...
+        </p>
+        <p className="mt-2 text-sm text-gray-600">
+          Fetched {fetchedTransactions} transactions
+        </p>
+      </div>
     );
   }
+  const formatDate = (dateStr?: string | Date) => {
+    if (!dateStr) return "N/A";
+
+    const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
+    if (isNaN(date.getTime())) return "N/A";
+
+    const day = date.getDate();
+    const month = date.toLocaleString("default", { month: "short" });
+    const year = date.getFullYear();
+
+    return `${month} ${day}, ${year}`;
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5 }}
-      className="container mx-auto px-4 py-8 bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-900 dark:to-indigo-900 min-h-screen"
-    >
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4 text-indigo-900 dark:text-indigo-100">
-          Solana Analytics Dashboard
-        </h1>
-        <div className="inline-block bg-indigo-600 text-white text-5xl font-bold py-4 px-8 rounded-full shadow-lg">
-          Score: {mock_data.score ?? "N/A"} / 100
+    <main className="container max-w-screen-xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-1">
+            <Avatar className="h-8 w-8 bg-gray-100 flex items-center justify-center">
+              <User className="h-5 w-5 text-gray-500" />
+            </Avatar>
+            <div className="text-sm">
+              <span className="font-medium">
+                {address[0].slice(0, 4) +
+                  "......." +
+                  address[0].slice(address.length - 5)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2 text-center">
+          <h2 className="text-xl font-medium">ONCHAIN SCORE:</h2>
+          <div className="flex items-baseline justify-center gap-2">
+            <span className="text-6xl font-normal text-[#4F46E5]">
+              {data?.score}
+            </span>
+            <span className="text-2xl text-gray-600">/100</span>
+          </div>
+        </div>
+
+        <TxGraph data={data?.stats?.dayCount || []} />
+        
+        <div className="grid grid-cols-2 gap-8 items-start justify-items-start">
+          {[
+            {
+              emoji: "💫",
+              label: "transactions",
+              text: "Transactions: ",
+              value: data?.totaltx,
+              suffix: " on Solana",
+            },
+            {
+              emoji: "💸",
+              label: "days",
+              text: "Total Fee Paid ",
+              value: (data?.fee! / LAMPORTS_PER_SOL).toFixed(3),
+              suffix: " SOL",
+            },
+            {
+              emoji: "👤",
+              label: "active",
+              text: "Active for ",
+              value: data?.stats?.uniqueDays,
+              suffix: " unique days",
+            },
+            {
+              emoji: "🔥",
+              label: "streak",
+              text: "Longest streak: ",
+              value: data?.stats?.longestStreak,
+              suffix: " days",
+              startDate: new Date(data?.stats?.longestStreakDates?.start || ""),
+              endDate: new Date(data?.stats?.longestStreakDates?.end || ""),
+            },
+            {
+              emoji: "🎯",
+              label: "current",
+              text: "Current streak: ",
+              value: data?.stats?.currentStreak || "0",
+              suffix: " days",
+              startDate: new Date(data?.stats?.currentStreakDates?.start || ""),
+              endDate: new Date(data?.stats?.currentStreakDates?.end || ""),
+            },
+            {
+              emoji: "🪙",
+              label: "transfer",
+              text: "Token Trasfers  ",
+              value:
+                getProgramCount(
+                  data?.programIdCountMap!,
+                  "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                ) +
+                getProgramCount(
+                  data?.programIdCountMap!,
+                  "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+                ),
+              suffix: " ",
+            },
+            {
+              emoji: "🔄",
+              label: "swap",
+              text: "Token Swaps  ",
+              value:
+                getProgramCount(
+                  data?.programIdCountMap!,
+                  popular_program_id["jupiter"][0]
+                ) +
+                getProgramCount(
+                  data?.programIdCountMap!,
+                  "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+                ),
+              suffix: " ",
+            },
+            {
+              emoji: "🌁",
+              label: "bridge",
+              text: "Token Bridge ",
+              value: getProgramCount(
+                data?.programIdCountMap!,
+                "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb"
+              ),
+              suffix: " ",
+            },
+            // {
+            //   emoji: "🔄",
+            //   label: "swaps",
+            //   text: "Jupiter Interactions  ",
+            //   value:
+            //     getProgramCount(
+            //       data?.programIdCountMap!,
+            //       popular_program_id["jupiter"][0]
+            //     ) +
+            //     getProgramCount(
+            //       data?.programIdCountMap!,
+            //       popular_program_id["jupiter"][1]
+            //     ) +
+            //     getProgramCount(
+            //       data?.programIdCountMap!,
+            //       popular_program_id["jupiter"][2]
+            //     ),
+            //   suffix: " ",
+            // },
+            // {
+            //   emoji: "🔄",
+            //   label: "squads",
+            //   text: "Tensor Interactions ",
+            //   value:
+            //     getProgramCount(
+            //       data?.programIdCountMap!,
+            //       popular_program_id["tensor"][0]
+            //     ) +
+            //     getProgramCount(
+            //       data?.programIdCountMap!,
+            //       popular_program_id["tensor"][1]
+            //     ),
+            //   suffix: " ",
+            // },
+            // {
+            //   emoji: "🔄",
+            //   label: "Squads",
+            //   text: "Squads Interactions ",
+            //   value:
+            //     getProgramCount(
+            //       data?.programIdCountMap!,
+            //       popular_program_id["squads"][0]
+            //     ) +
+            //     getProgramCount(
+            //       data?.programIdCountMap!,
+            //       popular_program_id["squads"][1]
+            //     ),
+            //   suffix: " ",
+            // },
+            // {
+            //   emoji: "🌉",
+            //   label: "bridge",
+            //   text: "Bridge transactions: ",
+            //   value: data?.stats?.bridgeTransactions || "0",
+            //   suffix: "",
+            // },
+          ].map((item, index) => (
+            <div key={index} className="flex items-center gap-3 pl-12">
+              <span
+                role="img"
+                aria-label={item.label}
+                className="w-6 text-center"
+              >
+                {item.emoji}
+              </span>
+              <span className="flex-1">
+                {item.text}
+                <strong className="font-semibold">{item.value}</strong>
+                {item.suffix}
+                {(item.label === "streak" || item.label === "current") &&
+                  item.startDate &&
+                  item.endDate &&
+                  item.startDate <= item.endDate && (
+                    <span className="block text-xs text-gray-500">
+                      {formatDate(item.startDate)} -{" "}
+                      {new Date(item.endDate).toISOString().split("T")[0] ===
+                      new Date().toISOString().split("T")[0]
+                        ? "Present"
+                        : formatDate(item.endDate)}
+                    </span>
+                  )}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
-      {/* <div className="mb-8"> */}
-      <TxGraph data={mock_data.stats.dayCount} />
-      {/* </div> */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <StatCard
-          title="Total Transactions"
-          value={mock_data.totaltx ?? 0}
-          icon={<Zap className="h-6 w-6 text-yellow-500" />}
-          color="bg-gradient-to-br from-yellow-400 to-orange-500"
-        />
-        <StatCard
-          title="Active Days"
-          value={`${mock_data.stats?.uniqueDays ?? 0} days`}
-          icon={<Calendar className="h-6 w-6 text-green-500" />}
-          color="bg-gradient-to-br from-green-400 to-emerald-500"
-        />
-        <StatCard
-          title="Longest Streak"
-          value={`${mock_data.stats?.longestStreak ?? 0} days`}
-          icon={<Award className="h-6 w-6 text-purple-500" />}
-          color="bg-gradient-to-br from-purple-400 to-pink-500"
-        />
-        {/* 
-        total swaps
-        total bridges
-        total transactions
-         */}
-        <StatCard
-          title="Current Streak"
-          value={`${mock_data.stats?.currentStreak ?? 0} days`}
-          icon={<ArrowUpRight className="h-6 w-6 text-blue-500" />}
-          color="bg-gradient-to-br from-blue-400 to-indigo-500"
-        />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <Card className="overflow-hidden shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-indigo-900 dark:text-indigo-100">
-              Longest Streak
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold mb-2">
-              {mock_data.stats?.longestStreak ?? 0} days
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              From{" "}
-              {new Date(
-                mock_data.stats?.longestStreakDates?.start ?? Date.now()
-              ).toLocaleDateString()}{" "}
-              to{" "}
-              {new Date(
-                mock_data.stats?.longestStreakDates?.end ?? Date.now()
-              ).toLocaleDateString()}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-indigo-900 dark:text-indigo-100">
-              Total Fee Paid
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
-              {((mock_data.fee ?? 0) / LAMPORTS_PER_SOL).toFixed(3)} SOL
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </motion.div>
+    </main>
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon,
-  color,
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-}) {
-  return (
-    <Card className={`overflow-hidden shadow-xl ${color}`}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
-          {icon}
-        </div>
-        <p className="text-3xl font-bold text-white">{value}</p>
-      </CardContent>
-    </Card>
-  );
+function getProgramCount(
+  data: ProgramIdDetailedCount[],
+  targetProgramId: string
+): number {
+  const program = data.find((item) => item.programId === targetProgramId);
+  return program?.overallCount ?? 0;
 }

@@ -1,10 +1,10 @@
-import { ConfirmedSignatureInfo, Connection, PublicKey } from "@solana/web3.js";
+import { ConfirmedSignatureInfo, PublicKey } from "@solana/web3.js";
 import { provider } from "./data";
 
 export async function getSignatures(
   address: string
 ): Promise<ConfirmedSignatureInfo[]> {
-  let signatures: ConfirmedSignatureInfo[] = [];
+  const signatures: ConfirmedSignatureInfo[] = [];
 
   const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
   const oneYearAgo = Math.floor(Date.now() / 1000) - ONE_YEAR_IN_SECONDS;

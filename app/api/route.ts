@@ -1,32 +1,63 @@
-import { countProgramIds } from "@/lib/program";
+import { countProgramIds, ProgramIdDetailedCount } from "@/lib/program";
 import { getSignatures } from "@/lib/sign";
-import { analyzeTransactionStreaks } from "@/lib/time";
+import { analyzeTransactionStreaks, StreakAnalysis } from "@/lib/time";
 import { getTransaction } from "@/lib/transaction";
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getTokens } from "@/lib/token";
 import { getDomains } from "@/lib/domain";
 import onchainScore from "@/lib/score";
+import { ConfirmedSignatureInfo } from "@solana/web3.js";
 
 interface txData {
   fee: number;
   time: number;
   programIds: string[];
 }
+
+export interface ResponseData {
+  score: number;
+  stats: StreakAnalysis;
+  fee: number;
+  totaltx: number;
+  programIdCountMap: ProgramIdDetailedCount[];
+}
 const primsa = new PrismaClient();
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const address = url.searchParams.get("address")!;
-  
+
   const startTime = Date.now();
+
+  try {
+    const db = await primsa.walletData.findUnique({
+      where: {
+        address: address,
+      },
+    });
+    if (db) {
+      const data: ResponseData = {
+        score: db.score,
+        stats: JSON.parse(db.stats),
+        fee: Number(db.fee),
+        totaltx: db.totalTransactions,
+        programIdCountMap: JSON.parse(db.programId),
+      };
+      console.log("Data from DB");
+      return NextResponse.json(data);
+    }
+  } catch (err) {
+    console.log("Error fetching data from DB", err);
+  }
+ 
   try {
     const signatures = await getSignatures(address);
 
     const tokensPromise = getTokens(address);
     const domainsPromise = getDomains(address);
 
-    const processBatch = async (signatures: any[], batchSize = 10) => {
+    const processBatch = async (signatures: ConfirmedSignatureInfo[], batchSize = 100) => {
       const txData: txData[] = [];
 
       for (let i = 0; i < signatures.length; i += batchSize) {
@@ -72,36 +103,48 @@ export async function GET(req: Request) {
     const endTime = Date.now();
     console.log(`Time taken: ${endTime - startTime}ms`);
 
-    // primsa.walletData.create({
-    //   data: {
-    //     address: address,
-    //     uniqueDays: stats.uniqueDays,
-    //     longestStreak: stats.longestStreak,
-    //     currentStreak: stats.currentStreak,
-    //     longestStreakDates: JSON.stringify(stats.longestStreakDates),
-    //     currentStreakDates: JSON.stringify(stats.currentStreakDates),
-    //     fee,
-    //     totalTransactions: totaltx,
-    //     programId: JSON.stringify(programIdCountMap),
-    //     txData:  JSON.stringify(txData),
-    //     tokens: JSON.stringify(tokens, (key, value) =>
-    //       typeof value === "bigint" ? value.toString() : value
-    //     ),
-    //     hasDomain: domains,
-    //   },
-    // });
-
     let score = onchainScore(totaltx, stats, programIdCountMap, tokens);
     if (domains) score += 5;
     if (score > 85) score += 5;
 
-    return NextResponse.json({
+    await primsa.walletData.upsert({
+      where: { address: address },
+      update: {
+        score: score,
+        stats: JSON.stringify(stats),
+        fee,
+        totalTransactions: totaltx,
+        programId: JSON.stringify(programIdCountMap),
+        txData: JSON.stringify(txData),
+        tokens: JSON.stringify(tokens, (_, value) =>
+          typeof value === "bigint" ? value.toString() : value
+        ),
+        hasDomain: domains,
+      },
+      create: {
+        address: address,
+        score: score,
+        stats: JSON.stringify(stats),
+        fee,
+        totalTransactions: totaltx,
+        programId: JSON.stringify(programIdCountMap),
+        txData: JSON.stringify(txData),
+        tokens: JSON.stringify(tokens, (_, value) =>
+          typeof value === "bigint" ? value.toString() : value
+        ),
+        hasDomain: domains,
+      },
+    });
+
+    const responseData: ResponseData = {
       score,
       stats,
       fee,
       totaltx,
       programIdCountMap,
-    });
+    };
+
+    return NextResponse.json(responseData);
   } catch (err) {
     console.error("Error fetching transactions:", err);
     return NextResponse.json(

@@ -11,16 +11,13 @@ datasource db {
 }
 
 model WalletData {
-  address            String  @id
-  uniqueDays         Int
-  longestStreak      Int
-  currentStreak      Int
-  longestStreakDates String?
-  currentStreakDates String?
-  fee                BigInt
-  totalTransactions  Int
-  programId          String
-  txData             String
-  tokens             String
-  hasDomain          Boolean
+  address           String  @id
+  score             Int
+  stats             String
+  fee               BigInt
+  totalTransactions Int
+  programId         String
+  txData            String
+  tokens            String
+  hasDomain         Boolean
 }

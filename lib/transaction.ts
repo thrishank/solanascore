@@ -1,4 +1,4 @@
-import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
+import {  PublicKey } from "@solana/web3.js";
 import { provider } from "./data";
 
 export async function getTransaction(
@@ -43,13 +43,13 @@ export async function getTransaction(
 
       // Resolve account keys using address tables
       const resolvedAccounts = message.getAccountKeys({
-        // @ts-ignore
+        // @ts-expect-error
         addressLookupTableAccounts: addressTables.map((res) => res.value),
       });
 
       const programIds: string[] = [];
       const compiledInstructions = message.compiledInstructions;
-      compiledInstructions.forEach((instruction, index) => {
+      compiledInstructions.forEach((instruction) => {
         const programId =
           resolvedAccounts.staticAccountKeys[
             instruction.programIdIndex
@@ -72,3 +72,4 @@ export async function getTransaction(
     return { fee: 0, time: 0, programIds: [] };
   }
 }
+ 
