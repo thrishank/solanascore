@@ -7,24 +7,27 @@ import { ResponseData } from "@/app/api/route";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { ProgramIdDetailedCount } from "@/lib/program";
 import { popular_program_id } from "@/lib/data";
+import { convertToImage } from "./twitter";
+import { Card, CardContent } from "./ui/card";
 
 export default function Stats() {
   const [data, setData] = useState<ResponseData>();
+  const [err, setErr] = useState<string | null>(null);
   const { address } = useAddressStore();
 
   const [loading, setLoading] = useState(true);
-
- 
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
         const res = await fetch(`/api?address=${address[0]}`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch data");
-        }
         const data = await res.json();
+        if (data.err) {
+          setErr(data.err);
+          return;
+        }
+
         setData(data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -57,6 +60,21 @@ export default function Stats() {
     };
   }, [loading, fetchedTransactions]);
 
+  const [small, setSmall] = useState(false);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        // sm breakpoint
+        setSmall(true);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -70,6 +88,17 @@ export default function Stats() {
       </div>
     );
   }
+
+  if (err) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="flex flex-col items-center justify-center">
+          <p className="text-lg font-medium text-red-500">{err}</p>
+        </div>
+      </div>
+    );
+  }
+
   const formatDate = (dateStr?: string | Date) => {
     if (!dateStr) return "N/A";
 
@@ -84,36 +113,49 @@ export default function Stats() {
   };
 
   return (
-    <main className="container max-w-screen-xl mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex flex-col items-center gap-1">
-            <Avatar className="h-8 w-8 bg-gray-100 flex items-center justify-center">
-              <User className="h-5 w-5 text-gray-500" />
-            </Avatar>
-            <div className="text-sm">
-              <span className="font-medium">
-                {address[0].slice(0, 4) +
-                  "......." +
-                  address[0].slice(address.length - 5)}
-              </span>
+    <main
+      className="container max-w-screen-xl mx-auto px-4 py-6 sm:py-8 md:py-12"
+      id="stats-container"
+    >
+      <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
+        <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="flex flex-col items-center gap-1 sm:gap-2">
+              <Avatar className="h-10 w-10 sm:h-12 sm:w-12 bg-gray-100 flex items-center justify-center">
+                <User className="h-6 w-6 sm:h-7 sm:w-7 text-gray-500" />
+              </Avatar>
+              <div className="text-sm sm:text-base">
+                <span className="font-medium">
+                  {address[0].slice(0, 4) +
+                    "......." +
+                    address[0].slice(address.length - 5)}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-2 text-center">
-          <h2 className="text-xl font-medium">ONCHAIN SCORE:</h2>
-          <div className="flex items-baseline justify-center gap-2">
-            <span className="text-6xl font-normal text-[#4F46E5]">
-              {data?.score}
-            </span>
-            <span className="text-2xl text-gray-600">/100</span>
+          <div className="flex items-center justify-center space-x-2 sm:space-x-4 text-center pb-8">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-medium">
+              ONCHAIN SCORE:
+            </h2>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl sm:text-5xl md:text-6xl font-normal text-[#4F46E5]">
+                {data?.score}
+              </span>
+              <span className="text-xl sm:text-2xl text-gray-600">/100</span>
+            </div>
           </div>
+
+          {small ? (
+            <TxGraph data={data?.stats?.dayCount || []} />
+          ) : (
+            <div id="tx-graph-container" className="pb-4">
+              <TxGraph data={data?.stats?.dayCount || []} />
+            </div>
+          )}
         </div>
 
-        <TxGraph data={data?.stats?.dayCount || []} />
-        
-        <div className="grid grid-cols-2 gap-8 items-start justify-items-start">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
           {[
             {
               emoji: "💫",
@@ -157,7 +199,7 @@ export default function Stats() {
             {
               emoji: "🪙",
               label: "transfer",
-              text: "Token Trasfers  ",
+              text: "Token Transfers  ",
               value:
                 getProgramCount(
                   data?.programIdCountMap!,
@@ -187,7 +229,7 @@ export default function Stats() {
             {
               emoji: "🌁",
               label: "bridge",
-              text: "Token Bridge ",
+              text: "Token Bridges ",
               value: getProgramCount(
                 data?.programIdCountMap!,
                 "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb"
@@ -251,32 +293,34 @@ export default function Stats() {
             //   suffix: "",
             // },
           ].map((item, index) => (
-            <div key={index} className="flex items-center gap-3 pl-12">
-              <span
-                role="img"
-                aria-label={item.label}
-                className="w-6 text-center"
-              >
-                {item.emoji}
-              </span>
-              <span className="flex-1">
-                {item.text}
-                <strong className="font-semibold">{item.value}</strong>
-                {item.suffix}
-                {(item.label === "streak" || item.label === "current") &&
-                  item.startDate &&
-                  item.endDate &&
-                  item.startDate <= item.endDate && (
-                    <span className="block text-xs text-gray-500">
-                      {formatDate(item.startDate)} -{" "}
-                      {new Date(item.endDate).toISOString().split("T")[0] ===
-                      new Date().toISOString().split("T")[0]
-                        ? "Present"
-                        : formatDate(item.endDate)}
-                    </span>
-                  )}
-              </span>
-            </div>
+            <Card key={index}>
+              <CardContent className="flex items-start gap-3 p-4">
+                <span role="img" aria-label={item.label} className="text-2xl">
+                  {item.emoji}
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500">{item.text}</p>
+                  <p className="text-lg font-semibold">
+                    {item.value !== undefined ? item.value : "N/A"}
+                    {item.suffix && (
+                      <span className="text-sm font-normal">{item.suffix}</span>
+                    )}
+                  </p>
+                  {(item.label === "streak" || item.label === "current") &&
+                    item.startDate &&
+                    item.endDate &&
+                    item.startDate <= item.endDate && (
+                      <p className="text-xs text-gray-500">
+                        {formatDate(item.startDate)} -{" "}
+                        {item.endDate.toISOString().split("T")[0] ===
+                        new Date().toISOString().split("T")[0]
+                          ? "Present"
+                          : formatDate(item.endDate)}
+                      </p>
+                    )}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

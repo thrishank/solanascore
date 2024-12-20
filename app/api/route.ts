@@ -50,14 +50,24 @@ export async function GET(req: Request) {
   } catch (err) {
     console.log("Error fetching data from DB", err);
   }
- 
+
   try {
     const signatures = await getSignatures(address);
-
+    if (signatures.length > 15000) {
+      return NextResponse.json(
+        {
+          err: "You have more than 15000 transasctions. Please enter the wallet you  use not the bot accounts and prorams",
+        },
+        { status: 400 }
+      );
+    }
     const tokensPromise = getTokens(address);
     const domainsPromise = getDomains(address);
 
-    const processBatch = async (signatures: ConfirmedSignatureInfo[], batchSize = 100) => {
+    const processBatch = async (
+      signatures: ConfirmedSignatureInfo[],
+      batchSize = 100
+    ) => {
       const txData: txData[] = [];
 
       for (let i = 0; i < signatures.length; i += batchSize) {

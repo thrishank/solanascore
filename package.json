@@ -29,7 +29,10 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.13.5",
+    "html-to-image": "^1.11.11",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.468.0",
+    "multiparty": "^4.2.3",
     "next": "14.2.20",
     "next-themes": "^0.4.4",
     "react": "^18",
@@ -41,6 +44,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@types/multiparty": "^4.2.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -51,6 +55,5 @@
     "prisma": "^6.1.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
-  },
-  "packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab"
+  }
 }

@@ -39,7 +39,7 @@ export async function getSignatures(
       oldestSignature = newSignatures[newSignatures.length - 1]?.signature;
 
       if (stopLoop) break;
-
+      if(signatures.length > 15000) break;
       // await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (err) {
       console.error("Error fetching signatures:", err);
