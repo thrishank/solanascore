@@ -124,14 +124,4 @@ export const popular_program_id = {
     "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
   ],
 };
-
-export const provider = new Connection(
-  "https://api.mainnet-beta.solana.com",
-);
  
-// Jupiter JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4
-// Tensor TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN TCMPhJdwDryooaGtiocG1u3xcYbRpiJzb283XfCZsDp
-// Squads SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu
-// Kamino FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD 6LtLpnUFNByNXLyCoK9wA2MykKAmQNZKBdY8s47dehDc
-// Drift dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH
-// Token TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb

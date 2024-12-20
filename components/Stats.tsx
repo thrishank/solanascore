@@ -7,37 +7,74 @@ import { ResponseData } from "@/app/api/route";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { ProgramIdDetailedCount } from "@/lib/program";
 import { popular_program_id } from "@/lib/data";
-import { convertToImage } from "./twitter";
 import { Card, CardContent } from "./ui/card";
+import { convertToImage } from "./twitter";
 
 export default function Stats() {
   const [data, setData] = useState<ResponseData>();
   const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [queuestatus, setQueueStatus] = useState(false);
+  const [queueinfo, setQueueInfo] = useState({
+    length: 0,
+    position: 0,
+    message: "",
+  });
+
   const { address } = useAddressStore();
 
-  const [loading, setLoading] = useState(true);
+  async function fetchData() {
+    try {
+      const res = await fetch(`/api?address=${address[0]}`);
+      const responseData = await res.json();
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api?address=${address[0]}`);
-        const data = await res.json();
-        if (data.err) {
-          setErr(data.err);
-          return;
-        }
+      // Check response status
+      if (res.status === 202 || res.status === 429) {
+        setQueueStatus(true);
+        setQueueInfo({
+          length: responseData.length,
+          position: responseData.position,
+          message: responseData.message,
+        });
+        return;
+      }
 
-        setData(data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
+      if (res.status === 400 || res.status === 500) {
+        setErr(responseData.err);
+        setQueueStatus(false);
+        return;
+      }
+
+      if (res.ok && responseData.score !== undefined) {
+        setData(responseData);
+        setQueueStatus(false);
+        setErr(null);
+      } else {
+        setErr("Invalid response format");
+        setQueueStatus(false);
+      }
+    } catch (error) {
+      setErr("Error fetching data. Please try again later.");
+      console.error("Error fetching data:", error);
+      setQueueStatus(false);
+    } finally {
+      // Only set loading to false if we're not in queue
+      if (!queuestatus) {
         setLoading(false);
       }
     }
+  }
 
+  useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (queuestatus) {
+      const interval = setInterval(fetchData, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [queuestatus, address]);
 
   const [fetchedTransactions, setFetchedTransactions] = useState(0);
 
@@ -61,7 +98,6 @@ export default function Stats() {
   }, [loading, fetchedTransactions]);
 
   const [small, setSmall] = useState(false);
-
   useEffect(() => {
     const updateWidth = () => {
       const width = window.innerWidth;
@@ -75,16 +111,41 @@ export default function Stats() {
     window.addEventListener("resize", updateWidth);
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
-  if (loading) {
+
+  if (loading || queuestatus) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <div className="loader animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500"></div>
-        <p className="mt-4 text-lg font-medium animate-pulse">
-          Fetching transactions...
-        </p>
-        <p className="mt-2 text-sm text-gray-600">
-          Fetched {fetchedTransactions} transactions
-        </p>
+        {queuestatus ? (
+          <>
+            <p className="text-lg font-medium">{queueinfo.message}</p>
+            {queueinfo.position > 10 && (
+              <p className="text-lg font-medium">
+                There is a huge traffic ahead of you. Please come back later
+                while we fetch your transactions.
+              </p>
+            )}
+            {queueinfo.position <= 10 && queueinfo.position > 4 && (
+              <p className="text-lg font-medium">
+                Your request is being processed. Please wait a moment.
+              </p>
+            )}
+            {queueinfo.position <= 4 && (
+              <>
+                <div className="loader animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500"></div>
+                <p className="mt-4 text-lg font-medium animate-pulse">
+                  Fetching data...
+                </p>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="loader animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500"></div>
+            <p className="mt-4 text-lg font-medium animate-pulse">
+              Fetching data...
+            </p>
+          </>
+        )}
       </div>
     );
   }
@@ -97,6 +158,35 @@ export default function Stats() {
         </div>
       </div>
     );
+  }
+
+  function getProgramCount(
+    data: ProgramIdDetailedCount[],
+    targetProgramId: string
+  ): number {
+    const program = data.find((item) => item.programId === targetProgramId);
+    return program?.overallCount ?? 0;
+  }
+
+  async function shareOnTwitter() {
+    const base64 = await convertToImage();
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ image: base64, address: address[0] }),
+    });
+
+    const data = await res.json();
+    const screenshotUrl = data.url;
+
+    const tweetIntentUrl = `https://twitter.com/intent/tweet?text=Check out my stats!&url=${encodeURIComponent(
+      screenshotUrl
+    )}`;
+
+    window.open(tweetIntentUrl, "_blank");
   }
 
   const formatDate = (dateStr?: string | Date) => {
@@ -113,11 +203,11 @@ export default function Stats() {
   };
 
   return (
-    <main
-      className="container max-w-screen-xl mx-auto px-4 py-6 sm:py-8 md:py-12"
-      id="stats-container"
-    >
-      <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
+    <main className="container max-w-screen-xl mx-auto px-4 py-6 sm:py-8 md:py-12">
+      <div
+        className="max-w-2xl mx-auto space-y-6 sm:space-y-8"
+        id="stats-container"
+      >
         <div className="flex flex-col items-center">
           <div className="flex flex-col items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
@@ -125,7 +215,12 @@ export default function Stats() {
                 <User className="h-6 w-6 sm:h-7 sm:w-7 text-gray-500" />
               </Avatar>
               <div className="text-sm sm:text-base">
-                <span className="font-medium">
+                <span
+                  className="font-medium cursor-pointer"
+                  onClick={() => {
+                    navigator.clipboard.writeText(address[0]);
+                  }}
+                >
                   {address[0].slice(0, 4) +
                     "......." +
                     address[0].slice(address.length - 5)}
@@ -324,14 +419,16 @@ export default function Stats() {
           ))}
         </div>
       </div>
-    </main>
-  );
-}
 
-function getProgramCount(
-  data: ProgramIdDetailedCount[],
-  targetProgramId: string
-): number {
-  const program = data.find((item) => item.programId === targetProgramId);
-  return program?.overallCount ?? 0;
+      {/* <div className="text-center mt-6">
+        <button
+          onClick={shareOnTwitter}
+          className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600"
+        >
+          Share on Twitter
+        </button>
+      </div> */}
+    </main>
+ 
+  );
 }

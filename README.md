@@ -6,6 +6,11 @@ indviudual programid score
 and below most interacted prgrams
 popular name and other just address
 
+website icon
+speed of the transactions
+it is waiting for the domains and tokens
 
-
+ 
 add the contact links 
+
+add a column in db for big signtaures 

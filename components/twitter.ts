@@ -18,10 +18,11 @@ export async function convertToImage() {
     });
 
     const imgData = canvas.toDataURL("image/png");
-    console.log(imgData)
+
     return imgData;
   } catch (error) {
     console.error("Error generating image:", error);
     throw error; // Re-throw the error for upstream handling
   }
 }
+

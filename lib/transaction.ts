@@ -1,12 +1,11 @@
-import {  PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { provider } from "./data";
 
 export async function getTransaction(
   signature: string,
   pubkey: string
 ): Promise<{ fee: number; time: number; programIds: string[] }> {
-  
-   const address = new PublicKey(pubkey);
+  const address = new PublicKey(pubkey);
 
   try {
     const transactionDetails = await provider.getTransaction(signature, {
@@ -72,4 +71,3 @@ export async function getTransaction(
     return { fee: 0, time: 0, programIds: [] };
   }
 }
- 

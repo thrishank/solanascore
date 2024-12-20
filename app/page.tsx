@@ -25,27 +25,6 @@ export default function SolanaAnalytics() {
     }
   }, [connected, disconnecting]);
 
-  async function shareOnTwitter() {
-    const base64 = await convertToImage();
-
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ image: base64, address: address[0] }),
-    });
-
-    const data = await res.json();
-    const screenshotUrl = data.url;
-
-    const tweetIntentUrl = `https://twitter.com/intent/tweet?text=Check out my stats!&url=${encodeURIComponent(
-      screenshotUrl
-    )}`;
-
-    window.open(tweetIntentUrl, "_blank");
-  }
-
 
   return (
     <div className="min-h-screen">
@@ -57,7 +36,7 @@ export default function SolanaAnalytics() {
               className="font-semibold text-lg sm:text-xl"
               onClick={async (e) => {
                 e.preventDefault();
-                setShowDashboard(!showDashboard);
+                setShowDashboard(false);
                 setAddress([]);
                 if (connected) await disconnect();
               }}
@@ -81,14 +60,16 @@ export default function SolanaAnalytics() {
         {showDashboard ? <Stats /> : <Hero />}
       </main>
 
-      <div className="text-center mt-6">
-        <button
-          onClick={shareOnTwitter}
-          className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600"
-        >
-          Share on Twitter
-        </button>
-      </div>
+      {/* {showDashboard ? (
+        <div className="text-center mt-6">
+          <button
+            onClick={shareOnTwitter}
+            className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600"
+          >
+            Share on Twitter
+          </button>
+        </div>
+      ) : null} */}
     </div>
   );
 }
