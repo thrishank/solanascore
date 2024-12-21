@@ -4,14 +4,27 @@ import { Input } from "@/components/ui/input";
 import useAddressStore from "@/state/address";
 import useDashboardStore from "@/state/page";
 import { PublicKey } from "@solana/web3.js";
+import { getWallet } from "@/lib/domain";
 
 export default function Hero() {
   const [showinput, setShowinput] = useState(false);
   const { address, setAddress } = useAddressStore();
   const { setShowDashboard } = useDashboardStore();
 
-  const handleOnSubmit = () => {
+  const handleOnSubmit = async () => {
     try {
+      const addr = address[0].trim();
+      if (addr.includes(".sol")) {
+        const wallet = await getWallet(addr);
+        if (wallet) {
+          setAddress([wallet]);
+          setShowDashboard(true);
+          return;
+        } else {
+          alert("Domain not found");
+          return;
+        }
+      }
       const pubkey = new PublicKey(address[0].trim());
       setShowDashboard(true);
       setAddress([pubkey.toString()]);
@@ -43,7 +56,7 @@ export default function Hero() {
         {showinput && (
           <div className="space-y-4 max-w-md mx-auto">
             <Input
-              placeholder="372a......vq9j"
+              placeholder="372a......vq9j, toly.sol"
               className="h-12 text-base sm:text-lg"
               onChange={(e) => setAddress([e.target.value])}
               onKeyDown={(e) => {
