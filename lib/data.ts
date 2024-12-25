@@ -108,6 +108,7 @@ export const popular_program_id = {
     "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
     "DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M",
     "j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X",
+    "PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu"
   ],
   tensor: [
     "TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN",
@@ -128,7 +129,7 @@ export const popular_program_id = {
 };
 
 export const provider = new Connection(
-  "https://cool-hardworking-glitter.solana-mainnet.quiknode.pro/fb22bd3bf17614eead8da21ebe148e768d975034"
+  "https://rpc.solanascore.xyz/fb22bd3bf17614eead8da21ebe148e768d975034"
 );
 
 export function stats_data(data: ResponseData) {
