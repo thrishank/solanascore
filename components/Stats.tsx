@@ -28,8 +28,7 @@ export default function Stats() {
       const res = await fetch(`/api?address=${address[0]}`);
       const responseData = await res.json();
 
-      // Check response status
-      if (res.status === 202 || res.status === 429) {
+      if (res.status === 202 || res.status === 203) {
         setQueueStatus(true);
         setQueueInfo({
           length: responseData.length,
@@ -58,7 +57,6 @@ export default function Stats() {
       console.error("Error fetching data:", error);
       setQueueStatus(false);
     } finally {
-      // Only set loading to false if we're not in queue
       if (!queuestatus) {
         setLoading(false);
       }
@@ -118,20 +116,18 @@ export default function Stats() {
         {queuestatus ? (
           <>
             <p className="text-lg font-medium">{queueinfo.message}</p>
-            {queueinfo.position > 10 && (
+            <div className="loader animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500"></div>
+            {queueinfo.position > 10 ? (
               <p className="text-lg font-medium">
                 There is a huge traffic ahead of you. Please come back later
                 while we fetch your transactions.
               </p>
-            )}
-            {queueinfo.position <= 10 && queueinfo.position > 4 && (
+            ) : queueinfo.position > 4 ? (
               <p className="text-lg font-medium">
                 Your request is being processed. Please wait a moment.
               </p>
-            )}
-            {queueinfo.position <= 4 && (
+            ) : (
               <>
-                <div className="loader animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500"></div>
                 <p className="mt-4 text-lg font-medium animate-pulse">
                   Fetching data...
                 </p>
@@ -142,7 +138,7 @@ export default function Stats() {
           <>
             <div className="loader animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500"></div>
             <p className="mt-4 text-lg font-medium animate-pulse">
-              Fetching data...
+              loading data...
             </p>
           </>
         )}
@@ -182,7 +178,7 @@ export default function Stats() {
     const data = await res.json();
     const screenshotUrl = data.url;
 
-    const tweetIntentUrl = `https://twitter.com/intent/tweet?text=Check out my stats!&url=${encodeURIComponent(
+    const tweetIntentUrl = `https://twitter.com/intent/tweet?text=Just checked out my solanascore!&url=${encodeURIComponent(
       screenshotUrl
     )}`;
 
@@ -204,11 +200,8 @@ export default function Stats() {
 
   return (
     <main className="container max-w-screen-xl mx-auto px-4 py-6 sm:py-8 md:py-12">
-      <div
-        className="max-w-2xl mx-auto space-y-6 sm:space-y-8"
-        id="stats-container"
-      >
-        <div className="flex flex-col items-center">
+      <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
+        <div className="flex flex-col items-center" id="stats-container">
           <div className="flex flex-col items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <Avatar className="h-10 w-10 sm:h-12 sm:w-12 bg-gray-100 flex items-center justify-center">
@@ -292,6 +285,16 @@ export default function Stats() {
               endDate: new Date(data?.stats?.currentStreakDates?.end || ""),
             },
             {
+              emoji: "📈",
+              label: "most tx",
+              text: "Most transactions: ",
+              value: getMostTransactionsData(data?.stats?.dayCount!).count,
+              suffix: " on",
+              startDate: new Date(
+                getMostTransactionsData(data?.stats?.dayCount!).date
+              ),
+            },
+            {
               emoji: "🪙",
               label: "transfer",
               text: "Token Transfers  ",
@@ -318,6 +321,14 @@ export default function Stats() {
                 getProgramCount(
                   data?.programIdCountMap!,
                   "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+                ) +
+                getProgramCount(
+                  data?.programIdCountMap!,
+                  "2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c"
+                ) +
+                getProgramCount(
+                  data?.programIdCountMap!,
+                  "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
                 ),
               suffix: " ",
             },
@@ -413,6 +424,11 @@ export default function Stats() {
                           : formatDate(item.endDate)}
                       </p>
                     )}
+                  {item.label === "most tx" && item.startDate && (
+                    <p className="text-xs text-gray-500">
+                      {formatDate(item.startDate)}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -420,15 +436,45 @@ export default function Stats() {
         </div>
       </div>
 
-      {/* <div className="text-center mt-6">
+      <div className="text-center mt-6">
         <button
           onClick={shareOnTwitter}
           className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600"
         >
           Share on Twitter
         </button>
-      </div> */}
+      </div>
+
+      <footer className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-20">
+        <div className="text-center text-sm sm:text-base">
+          <p>
+            Made by{" "}
+            <a
+              href="https://twitter.com/3thris"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold"
+            >
+              @3thris
+            </a>
+          </p>
+        </div>
+      </footer>
     </main>
- 
   );
+}
+
+function getMostTransactionsData(data: { date: string; count: number }[]) {
+  const result = {
+    date: "",
+    count: 0,
+  };
+
+  for (let i = 0; i < data.length; i++) {
+    if (data[i].count > result.count) {
+      result.date = data[i].date;
+      result.count = data[i].count;
+    }
+  }
+  return result;
 }

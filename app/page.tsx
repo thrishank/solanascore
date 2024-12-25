@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import Hero from "@/components/HeroPage";
 import Stats from "@/components/Stats";
-import { convertToImage } from "@/components/twitter";
 
 export default function SolanaAnalytics() {
   const { showDashboard, setShowDashboard } = useDashboardStore();
@@ -24,7 +23,6 @@ export default function SolanaAnalytics() {
       setShowDashboard(false);
     }
   }, [connected, disconnecting]);
-
 
   return (
     <div className="min-h-screen">
@@ -59,17 +57,7 @@ export default function SolanaAnalytics() {
       <main className="mt-4 sm:mt-8 flex justify-center">
         {showDashboard ? <Stats /> : <Hero />}
       </main>
-
-      {/* {showDashboard ? (
-        <div className="text-center mt-6">
-          <button
-            onClick={shareOnTwitter}
-            className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600"
-          >
-            Share on Twitter
-          </button>
-        </div>
-      ) : null} */}
+      
     </div>
   );
 }

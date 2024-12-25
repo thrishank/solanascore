@@ -46,7 +46,7 @@ export async function GET(req: Request) {
         programIdCountMap: JSON.parse(db.programId),
       };
       console.log("Data from DB");
-      return NextResponse.json(data);
+      return NextResponse.json(data, {status: 200});
     }
   } catch (err) {
     console.log("Error fetching data from DB", err);
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
         length: processingQueue.length,
         position: processingQueue.indexOf(address) + 1,
       },
-      { status: 429 }
+      { status: 203 }
     );
   }
   processingQueue.push(address);
@@ -68,7 +68,7 @@ export async function GET(req: Request) {
   return NextResponse.json(
     {
       message:
-        "Your request has been queued. Sip some coffee while we process it.",
+        "Your request has been queued. Processing will begin shortly.",
       length: processingQueue.length,
       position: processingQueue.indexOf(address) + 1,
     },
@@ -87,7 +87,7 @@ async function processAddress() {
     if (signatures.length > 15000) {
       return (
         NextResponse.json({
-          err: "You have more than 15000 transasctions. Please enter the wallet you use not the bot accounts and programs.",
+          err: "You have more than 15000 transasctions. Please enter the wallet you dialy use not the bot accounts and programs.",
         }),
         { status: 400 }
       );

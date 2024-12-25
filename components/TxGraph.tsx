@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ActivityCalendar from "react-activity-calendar";
 import { Tooltip as MuiTooltip } from "@mui/material";
-import { useEffect, useState } from "react";
 
 interface InputData {
   date: string;
@@ -48,22 +47,6 @@ export default function TxGraph({
 }) {
   const yearData = generateYearData(data);
 
-  const [blockSize, setBlockSize] = useState(14);
-
-  useEffect(() => {
-    const updateWidth = () => {
-      const width = window.innerWidth;
-      if (width < 640) {
-        // sm breakpoint
-        setBlockSize(10);
-      }
-    };
-
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
-  }, []);
-
   return (
     <Card className="w-full bg-white">
       <CardHeader>
@@ -94,7 +77,6 @@ export default function TxGraph({
               "Dec",
             ],
             weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-            totalCount: '{{count}} Transactions'
           }}
           renderBlock={(block, activity) => (
             <MuiTooltip
@@ -107,7 +89,7 @@ export default function TxGraph({
           renderColorLegend={(block, level) => (
             <MuiTooltip title={`Level: ${level}`}>{block}</MuiTooltip>
           )}
-          blockSize={blockSize}
+          blockSize={10}
           blockMargin={2}
           fontSize={12}
           theme={{
@@ -115,7 +97,7 @@ export default function TxGraph({
             dark: ["#EAEDF0", "#C6E48B", "#7BC96F", "#239A3B", "#196127"],
           }}
           maxLevel={4}
- 
+          hideTotalCount={true}
         />
       </CardContent>
     </Card>

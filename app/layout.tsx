@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { Analytics } from "@vercel/analytics/react";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Solana Score",
@@ -18,7 +18,7 @@ export default function RootLayout({
       <body className={`antialiased`}>
         <Providers>
           {children}
-          <Analytics />
+          <Toaster />
         </Providers>
       </body>
     </html>

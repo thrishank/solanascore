@@ -11,6 +11,7 @@ export default function Hero() {
   const { address, setAddress } = useAddressStore();
   const { setShowDashboard } = useDashboardStore();
 
+ 
   const handleOnSubmit = async () => {
     try {
       const addr = address[0].trim();
@@ -30,6 +31,10 @@ export default function Hero() {
       setAddress([pubkey.toString()]);
     } catch (error) {
       console.error(error);
+      // toast({
+      //   title: "Invalid Solana address",
+      //   description: "Please enter a valid Solana address.",
+      // })
       alert("Please enter a valid Solana address.");
     }
   };
@@ -56,7 +61,7 @@ export default function Hero() {
         {showinput && (
           <div className="space-y-4 max-w-md mx-auto">
             <Input
-              placeholder="372a......vq9j, toly.sol"
+              placeholder="toly.sol, 372a......vq9j"
               className="h-12 text-base sm:text-lg"
               onChange={(e) => setAddress([e.target.value])}
               onKeyDown={(e) => {

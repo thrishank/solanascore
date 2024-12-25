@@ -125,3 +125,5 @@ export const popular_program_id = {
   ],
 };
  
+
+export const provider = new Connection("https://cool-hardworking-glitter.solana-mainnet.quiknode.pro/fb22bd3bf17614eead8da21ebe148e768d975034")

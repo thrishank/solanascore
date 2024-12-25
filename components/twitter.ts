@@ -2,7 +2,6 @@ import html2canvas from "html2canvas";
 
 export async function convertToImage() {
   try {
-    console.log("Generating image...");
     const element = document.getElementById("stats-container");
 
     if (!element) {
@@ -12,9 +11,7 @@ export async function convertToImage() {
     }
 
     const canvas = await html2canvas(element, {
-      width: 1200, // Set your desired width
-      scale: 2, // Increase scale for better quality
-      windowWidth: 1600, // Match with width for consistency
+      useCORS: true,
     });
 
     const imgData = canvas.toDataURL("image/png");
@@ -25,4 +22,3 @@ export async function convertToImage() {
     throw error; // Re-throw the error for upstream handling
   }
 }
-
