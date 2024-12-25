@@ -22,3 +22,24 @@ export async function convertToImage() {
     throw error; // Re-throw the error for upstream handling
   }
 }
+
+export async function shareOnTwitter(address: string) {
+  const base64 = await convertToImage();
+
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ image: base64, address: address }),
+  });
+
+  const data = await res.json();
+  const screenshotUrl = data.url;
+
+  const tweetIntentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+    "Just checked out my Solana score!"
+  )}&url=${encodeURIComponent(screenshotUrl)}`;
+
+  window.open(tweetIntentUrl, "_blank");
+}

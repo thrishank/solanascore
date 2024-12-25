@@ -27,7 +27,6 @@ export function analyzeTransactionStreaks(
     };
   }
 
-  // Convert timestamps to dates and get unique sorted dates
   const dates = timestamps.map(
     (ts) => new Date(ts * 1000).toISOString().split("T")[0]
   );
@@ -40,12 +39,10 @@ export function analyzeTransactionStreaks(
   let longestStreak = 0;
   let longestStreakDates: { start: Date; end: Date } | undefined;
 
-  // Initialize streaks
   let tempStreak = 1;
   let tempStart = sortedDates[0];
   let tempEnd = sortedDates[0];
 
-  // Calculate streaks
   for (let i = 1; i < sortedDates.length; i++) {
     const dayDifference = Math.round(
       (sortedDates[i].getTime() - sortedDates[i - 1].getTime()) /
@@ -56,7 +53,6 @@ export function analyzeTransactionStreaks(
       tempStreak++;
       tempEnd = sortedDates[i];
     } else {
-      // Check if current tempStreak is the longest before resetting
       if (tempStreak > longestStreak) {
         longestStreak = tempStreak;
         longestStreakDates = {
@@ -70,7 +66,6 @@ export function analyzeTransactionStreaks(
     }
   }
 
-  // Check one last time for longest streak
   if (tempStreak > longestStreak) {
     longestStreak = tempStreak;
     longestStreakDates = {
@@ -79,7 +74,6 @@ export function analyzeTransactionStreaks(
     };
   }
 
-  // Calculate current streak
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const lastDate = new Date(sortedDates[sortedDates.length - 1]);
@@ -100,7 +94,6 @@ export function analyzeTransactionStreaks(
     currentStreakDates = undefined;
   }
 
-  // Calculate counts per month and per day
   const counts: Record<number, number> = {};
   const dayCount: { date: string; count: number }[] = [];
 

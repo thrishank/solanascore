@@ -7,13 +7,13 @@ import {
 import { provider } from "./data";
 
 export async function getTokens(address: string) {
-  const tokenAccounts = await  provider.getTokenAccountsByOwner(
+  const tokenAccounts = await provider.getTokenAccountsByOwner(
     new PublicKey(address),
     {
       programId: TOKEN_PROGRAM_ID,
     }
   );
-  const token2022Account = await  provider.getTokenAccountsByOwner(
+  const token2022Account = await provider.getTokenAccountsByOwner(
     new PublicKey(address),
     {
       programId: TOKEN_2022_PROGRAM_ID,

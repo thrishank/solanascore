@@ -1,4 +1,6 @@
-import { Connection } from "@solana/web3.js";
+import { ResponseData } from "@/app/api/route";
+import { Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { getMostTransactionsData, getProgramCount } from "./fn";
 
 export const lst_tokens = [
   "LSTxxxnJzKDFSLr4dUkPcmCf5VyryEqzPLz5j4bpxFp",
@@ -124,6 +126,165 @@ export const popular_program_id = {
     "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
   ],
 };
- 
 
-export const provider = new Connection("https://cool-hardworking-glitter.solana-mainnet.quiknode.pro/fb22bd3bf17614eead8da21ebe148e768d975034")
+export const provider = new Connection(
+  "https://cool-hardworking-glitter.solana-mainnet.quiknode.pro/fb22bd3bf17614eead8da21ebe148e768d975034"
+);
+
+export function stats_data(data: ResponseData) {
+  const result = [
+    {
+      emoji: "💫",
+      label: "transactions",
+      text: "Transactions: ",
+      value: data?.totaltx,
+      suffix: " on Solana",
+    },
+    {
+      emoji: "💸",
+      label: "days",
+      text: "Total Fee Paid ",
+      value: (data?.fee! / LAMPORTS_PER_SOL).toFixed(3),
+      suffix: " SOL",
+    },
+    {
+      emoji: "👤",
+      label: "active",
+      text: "Active for ",
+      value: data?.stats?.uniqueDays,
+      suffix: " unique days",
+    },
+    {
+      emoji: "🔥",
+      label: "streak",
+      text: "Longest streak: ",
+      value: data?.stats?.longestStreak,
+      suffix: " days",
+      startDate: new Date(data?.stats?.longestStreakDates?.start || ""),
+      endDate: new Date(data?.stats?.longestStreakDates?.end || ""),
+    },
+    {
+      emoji: "🎯",
+      label: "current",
+      text: "Current streak: ",
+      value: data?.stats?.currentStreak || "0",
+      suffix: " days",
+      startDate: new Date(data?.stats?.currentStreakDates?.start || ""),
+      endDate: new Date(data?.stats?.currentStreakDates?.end || ""),
+    },
+    {
+      emoji: "📈",
+      label: "most tx",
+      text: "Most transactions: ",
+      value: getMostTransactionsData(data?.stats?.dayCount!).count,
+      suffix: " on",
+      startDate: new Date(getMostTransactionsData(data?.stats?.dayCount!).date),
+    },
+    {
+      emoji: "🪙",
+      label: "transfer",
+      text: "Token Transfers  ",
+      value:
+        getProgramCount(
+          data?.programIdCountMap!,
+          "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        ) +
+        getProgramCount(
+          data?.programIdCountMap!,
+          "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        ),
+      suffix: " ",
+    },
+    {
+      emoji: "🔄",
+      label: "swap",
+      text: "Token Swaps  ",
+      value:
+        getProgramCount(
+          data?.programIdCountMap!,
+          popular_program_id["jupiter"][0]
+        ) +
+        getProgramCount(
+          data?.programIdCountMap!,
+          "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+        ) +
+        getProgramCount(
+          data?.programIdCountMap!,
+          "2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c"
+        ) +
+        getProgramCount(
+          data?.programIdCountMap!,
+          "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+        ),
+      suffix: " ",
+    },
+    {
+      emoji: "🌁",
+      label: "bridge",
+      text: "Token Bridges ",
+      value: getProgramCount(
+        data?.programIdCountMap!,
+        "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb"
+      ),
+      suffix: " ",
+    },
+    // {
+    //   emoji: "🔄",
+    //   label: "swaps",
+    //   text: "Jupiter Interactions  ",
+    //   value:
+    //     getProgramCount(
+    //       data?.programIdCountMap!,
+    //       popular_program_id["jupiter"][0]
+    //     ) +
+    //     getProgramCount(
+    //       data?.programIdCountMap!,
+    //       popular_program_id["jupiter"][1]
+    //     ) +
+    //     getProgramCount(
+    //       data?.programIdCountMap!,
+    //       popular_program_id["jupiter"][2]
+    //     ),
+    //   suffix: " ",
+    // },
+    // {
+    //   emoji: "🔄",
+    //   label: "squads",
+    //   text: "Tensor Interactions ",
+    //   value:
+    //     getProgramCount(
+    //       data?.programIdCountMap!,
+    //       popular_program_id["tensor"][0]
+    //     ) +
+    //     getProgramCount(
+    //       data?.programIdCountMap!,
+    //       popular_program_id["tensor"][1]
+    //     ),
+    //   suffix: " ",
+    // },
+    // {
+    //   emoji: "🔄",
+    //   label: "Squads",
+    //   text: "Squads Interactions ",
+    //   value:
+    //     getProgramCount(
+    //       data?.programIdCountMap!,
+    //       popular_program_id["squads"][0]
+    //     ) +
+    //     getProgramCount(
+    //       data?.programIdCountMap!,
+    //       popular_program_id["squads"][1]
+    //     ),
+    //   suffix: " ",
+    // },
+    // {
+    //   emoji: "🌉",
+    //   label: "bridge",
+    //   text: "Bridge transactions: ",
+    //   value: data?.stats?.bridgeTransactions || "0",
+    //   suffix: "",
+    // },
+  ];
+
+  return result;
+}

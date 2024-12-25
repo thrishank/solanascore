@@ -6,9 +6,10 @@ import useAddressStore from "@/state/address";
 import { ResponseData } from "@/app/api/route";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { ProgramIdDetailedCount } from "@/lib/program";
-import { popular_program_id } from "@/lib/data";
+import { popular_program_id, stats_data } from "@/lib/data";
 import { Card, CardContent } from "./ui/card";
-import { convertToImage } from "./twitter";
+import { convertToImage, shareOnTwitter } from "./twitter";
+import { formatDate, getMostTransactionsData, getProgramCount } from "@/lib/fn";
 
 export default function Stats() {
   const [data, setData] = useState<ResponseData>();
@@ -156,48 +157,6 @@ export default function Stats() {
     );
   }
 
-  function getProgramCount(
-    data: ProgramIdDetailedCount[],
-    targetProgramId: string
-  ): number {
-    const program = data.find((item) => item.programId === targetProgramId);
-    return program?.overallCount ?? 0;
-  }
-
-  async function shareOnTwitter() {
-    const base64 = await convertToImage();
-
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ image: base64, address: address[0] }),
-    });
-
-    const data = await res.json();
-    const screenshotUrl = data.url;
-
-    const tweetIntentUrl = `https://twitter.com/intent/tweet?text=Just checked out my solanascore!&url=${encodeURIComponent(
-      screenshotUrl
-    )}`;
-
-    window.open(tweetIntentUrl, "_blank");
-  }
-
-  const formatDate = (dateStr?: string | Date) => {
-    if (!dateStr) return "N/A";
-
-    const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
-    if (isNaN(date.getTime())) return "N/A";
-
-    const day = date.getDate();
-    const month = date.toLocaleString("default", { month: "short" });
-    const year = date.getFullYear();
-
-    return `${month} ${day}, ${year}`;
-  };
-
   return (
     <main className="container max-w-screen-xl mx-auto px-4 py-6 sm:py-8 md:py-12">
       <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
@@ -244,161 +203,7 @@ export default function Stats() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-          {[
-            {
-              emoji: "💫",
-              label: "transactions",
-              text: "Transactions: ",
-              value: data?.totaltx,
-              suffix: " on Solana",
-            },
-            {
-              emoji: "💸",
-              label: "days",
-              text: "Total Fee Paid ",
-              value: (data?.fee! / LAMPORTS_PER_SOL).toFixed(3),
-              suffix: " SOL",
-            },
-            {
-              emoji: "👤",
-              label: "active",
-              text: "Active for ",
-              value: data?.stats?.uniqueDays,
-              suffix: " unique days",
-            },
-            {
-              emoji: "🔥",
-              label: "streak",
-              text: "Longest streak: ",
-              value: data?.stats?.longestStreak,
-              suffix: " days",
-              startDate: new Date(data?.stats?.longestStreakDates?.start || ""),
-              endDate: new Date(data?.stats?.longestStreakDates?.end || ""),
-            },
-            {
-              emoji: "🎯",
-              label: "current",
-              text: "Current streak: ",
-              value: data?.stats?.currentStreak || "0",
-              suffix: " days",
-              startDate: new Date(data?.stats?.currentStreakDates?.start || ""),
-              endDate: new Date(data?.stats?.currentStreakDates?.end || ""),
-            },
-            {
-              emoji: "📈",
-              label: "most tx",
-              text: "Most transactions: ",
-              value: getMostTransactionsData(data?.stats?.dayCount!).count,
-              suffix: " on",
-              startDate: new Date(
-                getMostTransactionsData(data?.stats?.dayCount!).date
-              ),
-            },
-            {
-              emoji: "🪙",
-              label: "transfer",
-              text: "Token Transfers  ",
-              value:
-                getProgramCount(
-                  data?.programIdCountMap!,
-                  "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-                ) +
-                getProgramCount(
-                  data?.programIdCountMap!,
-                  "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
-                ),
-              suffix: " ",
-            },
-            {
-              emoji: "🔄",
-              label: "swap",
-              text: "Token Swaps  ",
-              value:
-                getProgramCount(
-                  data?.programIdCountMap!,
-                  popular_program_id["jupiter"][0]
-                ) +
-                getProgramCount(
-                  data?.programIdCountMap!,
-                  "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
-                ) +
-                getProgramCount(
-                  data?.programIdCountMap!,
-                  "2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c"
-                ) +
-                getProgramCount(
-                  data?.programIdCountMap!,
-                  "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
-                ),
-              suffix: " ",
-            },
-            {
-              emoji: "🌁",
-              label: "bridge",
-              text: "Token Bridges ",
-              value: getProgramCount(
-                data?.programIdCountMap!,
-                "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb"
-              ),
-              suffix: " ",
-            },
-            // {
-            //   emoji: "🔄",
-            //   label: "swaps",
-            //   text: "Jupiter Interactions  ",
-            //   value:
-            //     getProgramCount(
-            //       data?.programIdCountMap!,
-            //       popular_program_id["jupiter"][0]
-            //     ) +
-            //     getProgramCount(
-            //       data?.programIdCountMap!,
-            //       popular_program_id["jupiter"][1]
-            //     ) +
-            //     getProgramCount(
-            //       data?.programIdCountMap!,
-            //       popular_program_id["jupiter"][2]
-            //     ),
-            //   suffix: " ",
-            // },
-            // {
-            //   emoji: "🔄",
-            //   label: "squads",
-            //   text: "Tensor Interactions ",
-            //   value:
-            //     getProgramCount(
-            //       data?.programIdCountMap!,
-            //       popular_program_id["tensor"][0]
-            //     ) +
-            //     getProgramCount(
-            //       data?.programIdCountMap!,
-            //       popular_program_id["tensor"][1]
-            //     ),
-            //   suffix: " ",
-            // },
-            // {
-            //   emoji: "🔄",
-            //   label: "Squads",
-            //   text: "Squads Interactions ",
-            //   value:
-            //     getProgramCount(
-            //       data?.programIdCountMap!,
-            //       popular_program_id["squads"][0]
-            //     ) +
-            //     getProgramCount(
-            //       data?.programIdCountMap!,
-            //       popular_program_id["squads"][1]
-            //     ),
-            //   suffix: " ",
-            // },
-            // {
-            //   emoji: "🌉",
-            //   label: "bridge",
-            //   text: "Bridge transactions: ",
-            //   value: data?.stats?.bridgeTransactions || "0",
-            //   suffix: "",
-            // },
-          ].map((item, index) => (
+          {stats_data(data!).map((item, index) => (
             <Card key={index}>
               <CardContent className="flex items-start gap-3 p-4">
                 <span role="img" aria-label={item.label} className="text-2xl">
@@ -436,14 +241,14 @@ export default function Stats() {
         </div>
       </div>
 
-      <div className="text-center mt-6">
+      {/* <div className="text-center mt-6">
         <button
-          onClick={shareOnTwitter}
+          onClick={async () => await shareOnTwitter(address[0])}
           className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600"
         >
           Share on Twitter
         </button>
-      </div>
+      </div> */}
 
       <footer className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-20">
         <div className="text-center text-sm sm:text-base">
@@ -462,19 +267,4 @@ export default function Stats() {
       </footer>
     </main>
   );
-}
-
-function getMostTransactionsData(data: { date: string; count: number }[]) {
-  const result = {
-    date: "",
-    count: 0,
-  };
-
-  for (let i = 0; i < data.length; i++) {
-    if (data[i].count > result.count) {
-      result.date = data[i].date;
-      result.count = data[i].count;
-    }
-  }
-  return result;
 }
