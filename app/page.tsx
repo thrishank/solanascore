@@ -57,7 +57,6 @@ export default function SolanaAnalytics() {
       <main className="mt-4 sm:mt-8 flex justify-center">
         {showDashboard ? <Stats /> : <Hero />}
       </main>
-      
     </div>
   );
 }

@@ -24,6 +24,7 @@ export interface ResponseData {
 }
 const primsa = new PrismaClient();
 
+let signatures_length = 0;
 const processingQueue: string[] = [];
 let isProcessing = false;
 
@@ -46,7 +47,7 @@ export async function GET(req: Request) {
         programIdCountMap: JSON.parse(db.programId),
       };
       console.log("Data from DB");
-      return NextResponse.json(data, {status: 200});
+      return NextResponse.json(data, { status: 200 });
     }
   } catch (err) {
     console.log("Error fetching data from DB", err);
@@ -58,8 +59,9 @@ export async function GET(req: Request) {
         message: "Your request is being processed. Please wait a moment.",
         length: processingQueue.length,
         position: processingQueue.indexOf(address) + 1,
+        signatures: signatures_length,
       },
-      { status: 203 }
+      { status: 203 },
     );
   }
   processingQueue.push(address);
@@ -67,12 +69,11 @@ export async function GET(req: Request) {
 
   return NextResponse.json(
     {
-      message:
-        "Your request has been queued. Processing will begin shortly.",
+      message: "Your request has been queued. Processing will begin shortly.",
       length: processingQueue.length,
       position: processingQueue.indexOf(address) + 1,
     },
-    { status: 202 }
+    { status: 202 },
   );
 }
 
@@ -92,26 +93,27 @@ async function processAddress() {
         { status: 400 }
       );
     }
+    signatures_length = signatures.length;
     const tokensPromise = getTokens(address);
     const domainsPromise = getDomains(address);
 
     const processBatch = async (
       signatures: ConfirmedSignatureInfo[],
-      batchSize = 100
+      batchSize = 100,
     ) => {
       const txData: txData[] = [];
 
       for (let i = 0; i < signatures.length; i += batchSize) {
         const batch = signatures.slice(i, i + batchSize);
         const batchPromises = batch.map((sig) =>
-          getTransaction(sig.signature, address)
+          getTransaction(sig.signature, address),
         );
         const batchResults = await Promise.all(batchPromises);
         txData.push(...batchResults);
 
         if (i + batchSize < signatures.length) {
           console.log(
-            `Processed batch ${i / batchSize + 1}, waiting 1 seconds...`
+            `Processed batch ${i / batchSize + 1}, waiting 1 seconds...`,
           );
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
@@ -155,7 +157,7 @@ async function processAddress() {
         programId: JSON.stringify(programIdCountMap),
         txData: JSON.stringify(txData),
         tokens: JSON.stringify(tokens, (_, value) =>
-          typeof value === "bigint" ? value.toString() : value
+          typeof value === "bigint" ? value.toString() : value,
         ),
         hasDomain: domains,
       },
@@ -168,7 +170,7 @@ async function processAddress() {
         programId: JSON.stringify(programIdCountMap),
         txData: JSON.stringify(txData),
         tokens: JSON.stringify(tokens, (_, value) =>
-          typeof value === "bigint" ? value.toString() : value
+          typeof value === "bigint" ? value.toString() : value,
         ),
         hasDomain: domains,
       },
@@ -189,9 +191,10 @@ async function processAddress() {
     if (idx > -1) {
       processingQueue.splice(idx, 1);
     }
+    signatures_length = 0;
     return NextResponse.json(
       { err: "Error fetching transactions" },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     const idx = processingQueue.indexOf(address);
@@ -199,6 +202,7 @@ async function processAddress() {
       processingQueue.splice(idx, 1);
     }
     isProcessing = false;
+    signatures_length = 0;
     if (processingQueue.length > 0) {
       processAddress();
     }

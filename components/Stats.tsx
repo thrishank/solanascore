@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TxGraph from "./TxGraph";
 import { Avatar } from "./ui/avatar";
 import { User } from "lucide-react";
 import useAddressStore from "@/state/address";
 import { ResponseData } from "@/app/api/route";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { ProgramIdDetailedCount } from "@/lib/program";
-import { popular_program_id, stats_data } from "@/lib/data";
+import { stats_data } from "@/lib/data";
 import { Card, CardContent } from "./ui/card";
-import { convertToImage, shareOnTwitter } from "./twitter";
-import { formatDate, getMostTransactionsData, getProgramCount } from "@/lib/fn";
+import { formatDate } from "@/lib/fn";
+import StatsLoader from "./Loader";
 
 export default function Stats() {
   const [data, setData] = useState<ResponseData>();
@@ -21,6 +19,8 @@ export default function Stats() {
     position: 0,
     message: "",
   });
+  const [length, setLength] = useState(0);
+  const prevLength = useRef(0);
 
   const { address } = useAddressStore();
 
@@ -36,6 +36,11 @@ export default function Stats() {
           position: responseData.position,
           message: responseData.message,
         });
+        if (prevLength.current !== responseData.signatures) {
+          setLength(responseData.signatures);
+          prevLength.current = length;
+        }
+        // handle the lenght for another response also keep it 0
         return;
       }
 
@@ -73,28 +78,7 @@ export default function Stats() {
       const interval = setInterval(fetchData, 5000);
       return () => clearInterval(interval);
     }
-  }, [queuestatus, address]);
-
-  const [fetchedTransactions, setFetchedTransactions] = useState(0);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (loading) {
-      interval = setInterval(() => {
-        setFetchedTransactions((prev) => {
-          const next = prev + 10;
-          return next;
-        });
-      }, 2000);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [loading, fetchedTransactions]);
+  }, [queuestatus, length]);
 
   const [small, setSmall] = useState(false);
   useEffect(() => {
@@ -113,6 +97,16 @@ export default function Stats() {
 
   if (loading || queuestatus) {
     return (
+      <StatsLoader
+        queuestatus={queuestatus}
+        queueinfo={queueinfo}
+        totalSignatures={length}
+      />
+    );
+  }
+  /*
+  if (loading || queuestatus) {
+    return (
       <div className="flex flex-col items-center justify-center h-full">
         {queuestatus ? (
           <>
@@ -123,9 +117,11 @@ export default function Stats() {
                 There is a huge traffic ahead of you. Please come back later
                 while we fetch your transactions.
               </p>
-            ) : queueinfo.position > 4 ? (
+            ) : queueinfo.position > 1 ? (
               <p className="text-lg font-medium">
-                Your request is being processed. Please wait a moment.
+                Your request is being processed. Please wait a moment. You are
+                curretly at {queueinfo.position} position in a queue of{" "}
+                {queueinfo.length}
               </p>
             ) : (
               <>
@@ -146,7 +142,7 @@ export default function Stats() {
       </div>
     );
   }
-
+*/
   if (err) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
