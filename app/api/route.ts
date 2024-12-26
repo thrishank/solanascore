@@ -143,9 +143,13 @@ async function processAddress() {
     const programIdCountMap = countProgramIds(programIds_time);
     const totaltx = validTxData.length;
 
-    let score = onchainScore(totaltx, stats, programIdCountMap, tokens);
-    if (domains) score += 5;
-    if (score > 85) score += 5;
+    let score = onchainScore(
+      totaltx,
+      stats,
+      programIdCountMap,
+      tokens,
+      domains,
+    );
 
     await primsa.walletData.upsert({
       where: { address: address },

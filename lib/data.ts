@@ -104,11 +104,26 @@ export const stable_coins = [
   "USDSwr9ApdHk5bvJKMjzff41FfuX8bSxdKcR81vTwcA", // USDS
 ];
 export const popular_program_id = {
+  swap: [
+    "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
+    "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",
+    "2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c",
+  ],
+  token: [
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+  ],
+  metaplex: [
+    "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg",
+    "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d",
+  ],
   jupiter: [
     "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
     "DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M",
     "j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X",
-    "PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu"
+    "PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu",
   ],
   tensor: [
     "TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN",
@@ -118,18 +133,11 @@ export const popular_program_id = {
     "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
     "SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu",
   ],
-  drift: [
-    "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH",
-    "G6EoTTTgpkNBtVXo96EQp2m6uwwVh2Kt6YidjkmQqoha",
-  ],
-  token: [
-    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-    "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
-  ],
+  stake: ["Stake11111111111111111111111111111111111111"],
 };
 
 export const provider = new Connection(
-  "https://rpc.solanascore.xyz/fb22bd3bf17614eead8da21ebe148e768d975034"
+  "https://rpc.solanascore.xyz/fb22bd3bf17614eead8da21ebe148e768d975034",
 );
 
 export function stats_data(data: ResponseData) {
@@ -188,11 +196,11 @@ export function stats_data(data: ResponseData) {
       value:
         getProgramCount(
           data?.programIdCountMap!,
-          "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         ) +
         getProgramCount(
           data?.programIdCountMap!,
-          "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+          "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
         ),
       suffix: " ",
     },
@@ -203,19 +211,19 @@ export function stats_data(data: ResponseData) {
       value:
         getProgramCount(
           data?.programIdCountMap!,
-          popular_program_id["jupiter"][0]
+          popular_program_id["jupiter"][0],
         ) +
         getProgramCount(
           data?.programIdCountMap!,
-          "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+          "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
         ) +
         getProgramCount(
           data?.programIdCountMap!,
-          "2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c"
+          "2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c",
         ) +
         getProgramCount(
           data?.programIdCountMap!,
-          "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+          "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",
         ),
       suffix: " ",
     },
@@ -225,7 +233,7 @@ export function stats_data(data: ResponseData) {
       text: "Token Bridges ",
       value: getProgramCount(
         data?.programIdCountMap!,
-        "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb"
+        "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb",
       ),
       suffix: " ",
     },

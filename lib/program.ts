@@ -46,7 +46,7 @@ export function countProgramIds(inputs: Input[]): ProgramIdDetailedCount[] {
       (_, index) => ({
         month: index + 1,
         count: monthMap.get(index + 1) || 0,
-      })
+      }),
     );
 
     detailedProgramCounts.push({
@@ -60,9 +60,9 @@ export function countProgramIds(inputs: Input[]): ProgramIdDetailedCount[] {
 }
 
 export function calculateProgramScore(
-  programData: ProgramIdDetailedCount
+  programData: ProgramIdDetailedCount,
 ): number {
-  const MAX_SCORE = 6;
+  const MAX_SCORE = 5;
 
   const { overallCount, month } = programData;
 
@@ -99,7 +99,7 @@ export function calculateProgramScore(
 
   // Scale to MAX_SCORE and round to integer
   const finalScore = Math.round(
-    ((weightedScore + overallEngagementScore) / 2) * MAX_SCORE
+    ((weightedScore + overallEngagementScore) / 2) * MAX_SCORE,
   );
 
   return finalScore;

@@ -7,12 +7,14 @@ export default function onchainScore(
   txCount: number,
   stats: StreakAnalysis,
   programIdCountMap: ProgramIdDetailedCount[],
-  tokens: RawAccount[]
+  tokens: RawAccount[],
+  domains: boolean,
 ) {
   let score = 0;
   score += days_score(stats, txCount); // 50
-  score += programs_score(programIdCountMap); // 25
+  score += programs_score(programIdCountMap); // 35
   score += token_score(tokens); // 10
+  if (domains) score += 5; // 5
   return score;
 }
 
@@ -21,8 +23,10 @@ function programs_score(program_data: ProgramIdDetailedCount[]): number {
     jupiter: 0,
     tensor: 0,
     squads: 0,
-    drift: 0,
     token: 0,
+    metaplex: 0,
+    swap: 0,
+    stake: 0,
   };
 
   program_data.forEach((program) => {
@@ -38,8 +42,11 @@ function programs_score(program_data: ProgramIdDetailedCount[]): number {
     programScore.jupiter +
     programScore.tensor +
     programScore.squads +
-    programScore.drift +
-    programScore.token;
+    programScore.metaplex +
+    programScore.token +
+    programScore.swap +
+    programScore.stake;
+
   console.log("Program Score: ", programScore);
   return score;
 }
@@ -48,13 +55,13 @@ function days_score(stats: StreakAnalysis, totaltx: number): number {
   // Weighted scoring for unique active days
   const uniqueDaysScore = Math.min(
     20,
-    Math.log2(stats.uniqueDays + 1) * 4 // Logarithmic scaling
+    Math.log2(stats.uniqueDays + 1) * 4, // Logarithmic scaling
   );
 
   // Exponential scoring for longest streak
   const streakScore = Math.min(
     10,
-    (Math.exp(stats.longestStreak / 50) - 1) * 2 // Exponential scaling
+    (Math.exp(stats.longestStreak / 50) - 1) * 2, // Exponential scaling
   );
 
   // Monthly transactions scoring
@@ -90,7 +97,7 @@ function days_score(stats: StreakAnalysis, totaltx: number): number {
   // Total transactions scoring (new feature)
   const totalTxScore = Math.min(
     5,
-    Math.log2(totaltx + 1) // Logarithmic scaling for total transactions
+    Math.log2(totaltx + 1), // Logarithmic scaling for total transactions
   );
 
   // Calculate total score (max 50 points)
@@ -100,7 +107,7 @@ function days_score(stats: StreakAnalysis, totaltx: number): number {
       streakScore +
       monthlyTxScore +
       consistencyBonus +
-      totalTxScore
+      totalTxScore,
   );
 
   return Math.floor(totalScore);
