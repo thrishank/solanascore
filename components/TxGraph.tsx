@@ -2,31 +2,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ActivityCalendar from "react-activity-calendar";
 import { Tooltip as MuiTooltip } from "@mui/material";
 
-interface InputData {
-  date: string;
-  count: number;
-}
+const getLevel = (count: number): number => {
+  if (count >= 15) return 4;
+  if (count >= 5) return 3;
+  if (count >= 2) return 2;
+  if (count >= 1) return 1;
+  return 0;
+};
 
-interface YearData {
-  date: string;
-  count: number;
-  level: number;
-}
 
-function generateYearData(inputData: InputData[]): YearData[] {
-  const getLevel = (count: number): number => {
-    if (count >= 15) return 4;
-    if (count >= 5) return 3;
-    if (count >= 2) return 2;
-    if (count >= 1) return 1;
-    return 0;
-  };
+function generateYearData(inputData: { date: string; count: number }[]): { date: string; count: number; level: number }[] {
+  const yearData: { date: string; count: number; level: number }[] = [];
 
-  const yearData: YearData[] = [];
-  const startDate = new Date(new Date().getFullYear(), 0, 1);
-  const endDate = new Date(new Date().getFullYear(), 11, 31);
 
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+  let startDate = new Date();  // Start date: today
+  let endDate = new Date();   // End date: one year backward from today
+  endDate.setFullYear(endDate.getFullYear() - 1);
+
+  // Ensure proper date loop
+  if (startDate < endDate) {
+    [startDate, endDate] = [endDate, startDate];  
+  }
+
+  for (let d = new Date(startDate); d >= endDate; d.setDate(d.getDate() - 1)) {
     const dateString = d.toISOString().split("T")[0];
     const existingData = inputData.find((item) => item.date === dateString);
     const count = existingData ? existingData.count : 0;
@@ -37,8 +35,10 @@ function generateYearData(inputData: InputData[]): YearData[] {
     });
   }
 
+  yearData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); 
   return yearData;
 }
+
 
 export default function TxGraph({
   data,
@@ -46,7 +46,7 @@ export default function TxGraph({
   data: { date: string; count: number }[];
 }) {
   const yearData = generateYearData(data);
-
+  console.log(yearData);
   return (
     <Card className="w-full bg-white">
       <CardHeader>
