@@ -11,7 +11,8 @@ datasource db {
 }
 
 model WalletData {
-  address           String  @id
+  address           String   @id
+  createdAt         DateTime @default(now())
   score             Int
   stats             String
   fee               BigInt
