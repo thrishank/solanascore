@@ -16,4 +16,3 @@ npm install
  
 in /api/route.ts file to avoid rate limiting.
  
-in /api/route.ts file to avoid rate limiting
