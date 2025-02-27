@@ -15,4 +15,3 @@ npm install
 2. Get a free RPC url from quicknode or other rpc service and don't forget to lower the batchlimit
  
 in /api/route.ts file to avoid rate limiting.
- 
