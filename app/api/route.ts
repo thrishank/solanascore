@@ -21,12 +21,59 @@ export interface ResponseData {
   totaltx: number;
   programIdCountMap: ProgramIdDetailedCount[];
 }
-const primsa = new PrismaClient();
+
+const prisma = new PrismaClient();
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const address = url.searchParams.get("address")!;
+  const addr = url.searchParams.get("address")!;
+  const address = addr.split(",");
 
+  const emptyStreakAnalysis: StreakAnalysis = {
+    uniqueDays: 0,
+    longestStreak: 0,
+    currentStreak: 0,
+    counts: {},
+    dayCount: [],
+  };
+
+  const data: ResponseData = {
+    score: 0,
+    fee: 0,
+    totaltx: 0,
+    stats: emptyStreakAnalysis,
+    programIdCountMap: [],
+  };
+
+  for (const addr of address) {
+    const db = await prisma.walletData.findUnique({
+      where: {
+        address: addr,
+      },
+    });
+    if (db) {
+      data.score += db.score;
+      data.fee += Number(db.fee);
+      data.totaltx += db.totalTransactions;
+      data.stats = addStreakAnalysis(data.stats, JSON.parse(db.stats));
+      data.programIdCountMap.push(JSON.parse(db.programId));
+    }
+
+    const processedData = await processAddress(addr);
+    if (processedData) {
+      data.score += processedData.score;
+      data.fee += processedData.fee;
+      data.totaltx += processedData.totaltx;
+      data.stats = addStreakAnalysis(data.stats, processedData.stats);
+      data.programIdCountMap.push(...processedData.programIdCountMap);
+    }
+  }
+
+  data.score = parseInt((data.score / address.length).toString());
+
+  return NextResponse.json(data, { status: 200 });
+
+  /*
   try {
     const db = await primsa.walletData.findUnique({
       where: {
@@ -49,6 +96,7 @@ export async function GET(req: Request) {
   } catch (err) {
     console.log("Error fetching data from DB", err);
   }
+  */
 }
 
 async function processAddress(address: string) {
@@ -127,13 +175,9 @@ async function processAddress(address: string) {
       programIdCountMap,
     };
 
-    return NextResponse.json(responseData);
+    return responseData;
   } catch (err) {
     console.error("Error fetching transactions:", err);
-    return NextResponse.json(
-      { err: "Error fetching transactions" },
-      { status: 500 },
-    );
   }
 }
 
@@ -159,3 +203,61 @@ const processBatch = async (
   }
   return txData;
 };
+
+function addStreakAnalysis(
+  a: StreakAnalysis,
+  b: StreakAnalysis,
+): StreakAnalysis {
+  // Merge counts
+  const mergedCounts: Record<number, number> = { ...a.counts };
+  for (const [key, value] of Object.entries(b.counts)) {
+    const numKey = Number(key);
+    mergedCounts[numKey] = (mergedCounts[numKey] || 0) + value;
+  }
+
+  // Merge dayCount and sort by date
+  const mergedDayCount = [...a.dayCount, ...b.dayCount].sort(
+    (x, y) => new Date(x.date).getTime() - new Date(y.date).getTime(),
+  );
+
+  // Determine longest streak
+  const longestStreak = Math.max(a.longestStreak, b.longestStreak);
+  const longestStreakDates =
+    longestStreak === a.longestStreak
+      ? a.longestStreakDates
+      : b.longestStreakDates;
+
+  // Determine current streak
+  let currentStreak = a.currentStreak;
+  let currentStreakDates = a.currentStreakDates;
+
+  if (b.currentStreakDates?.start && a.currentStreakDates?.end) {
+    const aEndDate = new Date(a.currentStreakDates.end);
+    const bStartDate = new Date(b.currentStreakDates.start);
+
+    const isConsecutive =
+      bStartDate.getTime() - aEndDate.getTime() === 86400000; // Difference of 1 day in ms
+
+    if (isConsecutive) {
+      currentStreak += b.currentStreak;
+      currentStreakDates = {
+        start: a.currentStreakDates.start,
+        end: b.currentStreakDates.end,
+      };
+    } else if (b.currentStreak > a.currentStreak) {
+      currentStreak = b.currentStreak;
+      currentStreakDates = b.currentStreakDates;
+    }
+  }
+
+  // Return the merged StreakAnalysis
+  return {
+    uniqueDays: a.uniqueDays + b.uniqueDays,
+    longestStreak,
+    currentStreak,
+    longestStreakDates,
+    currentStreakDates,
+    counts: mergedCounts,
+    dayCount: mergedDayCount,
+  };
+}

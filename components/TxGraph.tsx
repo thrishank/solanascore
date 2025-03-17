@@ -10,18 +10,18 @@ const getLevel = (count: number): number => {
   return 0;
 };
 
-
-function generateYearData(inputData: { date: string; count: number }[]): { date: string; count: number; level: number }[] {
+function generateYearData(
+  inputData: { date: string; count: number }[],
+): { date: string; count: number; level: number }[] {
   const yearData: { date: string; count: number; level: number }[] = [];
 
-
-  let startDate = new Date();  // Start date: today
-  let endDate = new Date();   // End date: one year backward from today
+  let startDate = new Date(); // Start date: today
+  let endDate = new Date(); // End date: one year backward from today
   endDate.setFullYear(endDate.getFullYear() - 1);
 
   // Ensure proper date loop
   if (startDate < endDate) {
-    [startDate, endDate] = [endDate, startDate];  
+    [startDate, endDate] = [endDate, startDate];
   }
 
   for (let d = new Date(startDate); d >= endDate; d.setDate(d.getDate() - 1)) {
@@ -35,10 +35,11 @@ function generateYearData(inputData: { date: string; count: number }[]): { date:
     });
   }
 
-  yearData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); 
+  yearData.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
   return yearData;
 }
-
 
 export default function TxGraph({
   data,
@@ -46,7 +47,6 @@ export default function TxGraph({
   data: { date: string; count: number }[];
 }) {
   const yearData = generateYearData(data);
-  console.log(yearData);
   return (
     <Card className="w-full bg-white">
       <CardHeader>

@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
 // Define the store's type
 interface AddressState {
@@ -10,9 +10,9 @@ interface AddressState {
 // Create the store
 const useAddressStore = create<AddressState>()(
   devtools((set) => ({
-    address: [""], // Initial state
+    address: ["", "", ""], // Initial state with three empty strings
     setAddress: (newAddress) => set({ address: newAddress }),
-  }))
+  })),
 );
 
 export default useAddressStore;
