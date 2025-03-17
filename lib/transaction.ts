@@ -3,7 +3,7 @@ import { provider } from "./data";
 
 export async function getTransaction(
   signature: string,
-  pubkey: string
+  pubkey: string,
 ): Promise<{ fee: number; time: number; programIds: string[] }> {
   const address = new PublicKey(pubkey);
 
@@ -37,7 +37,7 @@ export async function getTransaction(
       const addressTables = await Promise.all(
         addressTableLookups.map(async (lookup) => {
           return provider.getAddressLookupTable(lookup.accountKey);
-        })
+        }),
       );
 
       // Resolve account keys using address tables
@@ -70,4 +70,45 @@ export async function getTransaction(
     console.error(`Error fetching transaction: ${signature}`, err);
     return { fee: 0, time: 0, programIds: [] };
   }
+}
+
+export async function getTransactionDune(address: string) {
+  const data = [];
+  let loop = true;
+  let offset = undefined;
+
+  while (loop) {
+    const dune_data = await dune(address, offset);
+    if (dune_data.transactions) {
+      data.push(...dune_data.transactions);
+    }
+
+    offset = dune_data.next_offset;
+    if (!offset) break;
+  }
+
+  const arr = data.map((transaction: any) => {
+    return {
+      time: transaction.block_time,
+      fee: transaction.raw_transaction.meta.fee,
+      programIds: transaction.raw_transaction.transaction.message.accountKeys,
+    };
+  });
+
+  return arr;
+}
+
+async function dune(address: string, offset?: string) {
+  const options = {
+    method: "GET",
+    headers: { "X-Dune-Api-Key": "i3Ko8OSHBL1GVVNMT6zv1RBOGUEwf0a0" },
+  };
+
+  const url = offset
+    ? `https://api.dune.com/api/echo/beta/transactions/svm/${address}?limit=2000&offset=${offset}`
+    : `https://api.dune.com/api/echo/beta/transactions/svm/${address}?limit=2000`;
+
+  const res = await fetch(url, options);
+  const data = await res.json();
+  return data;
 }

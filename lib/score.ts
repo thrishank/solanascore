@@ -11,10 +11,10 @@ export default function onchainScore(
   domains: boolean,
 ) {
   let score = 0;
-  score += days_score(stats, txCount); // 50
-  score += programs_score(programIdCountMap); // 35
-  score += token_score(tokens); // 10
-  if (domains) score += 5; // 5
+  score += days_score(stats, txCount); // 50 new 10
+  // score += programs_score(programIdCountMap); // 35
+  score += token_score(tokens); // 10 new 20
+  if (domains) score += 5; // 5 new 5
   return score;
 }
 
