@@ -15,7 +15,7 @@ export interface StreakAnalysis {
 }
 
 export function analyzeTransactionStreaks(
-  timestamps: number[]
+  timestamps: number[],
 ): StreakAnalysis {
   if (!timestamps || timestamps.length === 0) {
     return {
@@ -28,7 +28,7 @@ export function analyzeTransactionStreaks(
   }
 
   const dates = timestamps.map(
-    (ts) => new Date(ts * 1000).toISOString().split("T")[0]
+    (ts) => new Date(ts / 1000).toISOString().split("T")[0],
   );
   const uniqueDays = new Set(dates).size;
   const sortedUniqueDates = Array.from(new Set(dates)).sort();
@@ -46,7 +46,7 @@ export function analyzeTransactionStreaks(
   for (let i = 1; i < sortedDates.length; i++) {
     const dayDifference = Math.round(
       (sortedDates[i].getTime() - sortedDates[i - 1].getTime()) /
-        (1000 * 3600 * 24)
+        (1000 * 3600 * 24),
     );
 
     if (dayDifference === 1) {
@@ -80,7 +80,7 @@ export function analyzeTransactionStreaks(
   lastDate.setHours(0, 0, 0, 0);
 
   const daysSinceLast = Math.round(
-    (today.getTime() - lastDate.getTime()) / (1000 * 3600 * 24)
+    (today.getTime() - lastDate.getTime()) / (1000 * 3600 * 24),
   );
 
   if (daysSinceLast <= 1) {
@@ -93,13 +93,12 @@ export function analyzeTransactionStreaks(
     currentStreak = 0;
     currentStreakDates = undefined;
   }
-
   const counts: Record<number, number> = {};
   const dayCount: { date: string; count: number }[] = [];
 
   timestamps.forEach((ts) => {
-    const date = new Date(ts * 1000).toISOString().split("T")[0];
-    const month = new Date(ts * 1000).getMonth() + 1;
+    const date = new Date(ts / 1000).toISOString().split("T")[0];
+    const month = new Date(ts / 1000).getMonth() + 1;
 
     counts[month] = (counts[month] || 0) + 1;
 

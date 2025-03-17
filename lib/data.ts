@@ -137,7 +137,7 @@ export const popular_program_id = {
 };
 
 export const provider = new Connection(
-  "https://rpc.solanascore.xyz/fb22bd3bf17614eead8da21ebe148e768d975034",
+  "https://mainnet.helius-rpc.com/?api-key=20475b23-b7f2-46be-badc-ad4f62baf079",
 );
 
 export function stats_data(data: ResponseData) {

@@ -1,7 +1,6 @@
 import { countProgramIds, ProgramIdDetailedCount } from "@/lib/program";
-import { getSignatures } from "@/lib/sign";
 import { analyzeTransactionStreaks, StreakAnalysis } from "@/lib/time";
-import { getTransaction } from "@/lib/transaction";
+import { getTransaction, getTransactionDune } from "@/lib/transaction";
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getTokens } from "@/lib/token";
@@ -24,10 +23,6 @@ export interface ResponseData {
 }
 const primsa = new PrismaClient();
 
-let signatures_length = 0;
-const processingQueue: string[] = [];
-let isProcessing = false;
-
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const address = url.searchParams.get("address")!;
@@ -48,100 +43,42 @@ export async function GET(req: Request) {
       };
       console.log("Data from DB");
       return NextResponse.json(data, { status: 200 });
+    } else {
+      return await processAddress(address);
     }
   } catch (err) {
     console.log("Error fetching data from DB", err);
   }
-
-  if (processingQueue.includes(address)) {
-    return NextResponse.json(
-      {
-        message: "Your request is being processed. Please wait a moment.",
-        length: processingQueue.length,
-        position: processingQueue.indexOf(address) + 1,
-        signatures: signatures_length,
-      },
-      { status: 203 },
-    );
-  }
-  processingQueue.push(address);
-  processAddress();
-
-  return NextResponse.json(
-    {
-      message: "Your request has been queued. Processing will begin shortly.",
-      length: processingQueue.length,
-      position: processingQueue.indexOf(address) + 1,
-    },
-    { status: 202 },
-  );
 }
 
-async function processAddress() {
-  if (isProcessing || processingQueue.length === 0) return;
-
-  isProcessing = true;
-  const address = processingQueue.shift()!;
-
+async function processAddress(address: string) {
   try {
-    const signatures = await getSignatures(address);
-    if (signatures.length > 15000) {
-      return (
-        NextResponse.json({
-          err: "You have more than 15000 transasctions. Please enter the wallet you dialy use not the bot accounts and programs.",
-        }),
-        { status: 400 }
-      );
-    }
-    signatures_length = signatures.length;
     const tokensPromise = getTokens(address);
     const domainsPromise = getDomains(address);
 
-    const processBatch = async (
-      signatures: ConfirmedSignatureInfo[],
-      batchSize = 100,
-    ) => {
-      const txData: txData[] = [];
-
-      for (let i = 0; i < signatures.length; i += batchSize) {
-        const batch = signatures.slice(i, i + batchSize);
-        const batchPromises = batch.map((sig) =>
-          getTransaction(sig.signature, address),
-        );
-        const batchResults = await Promise.all(batchPromises);
-        txData.push(...batchResults);
-
-        if (i + batchSize < signatures.length) {
-          console.log(
-            `Processed batch ${i / batchSize + 1}, waiting 1 seconds...`,
-          );
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
-      return txData;
-    };
-
-    const txData = await processBatch(signatures);
+    const txDataArray = await getTransactionDune(address);
+    const txData = txDataArray.flat();
 
     const [tokens, domains] = await Promise.all([
       tokensPromise,
       domainsPromise,
     ]);
 
-    const programIds_time = txData
-      .filter((tx) => tx.time !== 0)
-      .map((tx) => ({
-        time: tx.time,
-        programId: Array.from(new Set(tx.programIds)),
-      }));
-
-    const timestamp = programIds_time.map((item) => item.time);
+    const timestamp = txData.map((item) => item.time);
     const stats = analyzeTransactionStreaks(timestamp);
 
-    const validTxData = txData.filter((tx) => tx.time !== 0);
-    const fee = validTxData.reduce((sum, tx) => sum + tx.fee, 0);
-    const programIdCountMap = countProgramIds(programIds_time);
-    const totaltx = validTxData.length;
+    const fee = txData.reduce((sum, tx) => sum + tx.fee, 0);
+
+    const programs = txData.map((tx) => {
+      return {
+        programId: tx.programIds,
+        time: tx.time,
+      };
+    });
+
+    const programIdCountMap = countProgramIds(programs);
+
+    const totaltx = txData.length;
 
     let score = onchainScore(
       totaltx,
@@ -151,6 +88,7 @@ async function processAddress() {
       domains,
     );
 
+    /* 
     await primsa.walletData.upsert({
       where: { address: address },
       update: {
@@ -179,6 +117,7 @@ async function processAddress() {
         hasDomain: domains,
       },
     });
+    */
 
     const responseData: ResponseData = {
       score,
@@ -191,24 +130,32 @@ async function processAddress() {
     return NextResponse.json(responseData);
   } catch (err) {
     console.error("Error fetching transactions:", err);
-    const idx = processingQueue.indexOf(address);
-    if (idx > -1) {
-      processingQueue.splice(idx, 1);
-    }
-    signatures_length = 0;
     return NextResponse.json(
       { err: "Error fetching transactions" },
       { status: 500 },
     );
-  } finally {
-    const idx = processingQueue.indexOf(address);
-    if (idx > -1) {
-      processingQueue.splice(idx, 1);
-    }
-    isProcessing = false;
-    signatures_length = 0;
-    if (processingQueue.length > 0) {
-      processAddress();
-    }
   }
 }
+
+const processBatch = async (
+  signatures: ConfirmedSignatureInfo[],
+  batchSize = 10,
+  address: string,
+) => {
+  const txData: txData[] = [];
+
+  for (let i = 0; i < signatures.length; i += batchSize) {
+    const batch = signatures.slice(i, i + batchSize);
+    const batchPromises = batch.map((sig) =>
+      getTransaction(sig.signature, address),
+    );
+    const batchResults = await Promise.all(batchPromises);
+    txData.push(...batchResults);
+
+    if (i + batchSize < signatures.length) {
+      console.log(`Processed batch ${i / batchSize + 1}, waiting 1 seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+  return txData;
+};
