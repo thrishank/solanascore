@@ -189,6 +189,7 @@ export function stats_data(data: ResponseData) {
       suffix: " on",
       startDate: new Date(getMostTransactionsData(data?.stats?.dayCount!).date),
     },
+    /* 
     {
       emoji: "🪙",
       label: "transfer",
@@ -237,6 +238,7 @@ export function stats_data(data: ResponseData) {
       ),
       suffix: " ",
     },
+    */
     // {
     //   emoji: "🔄",
     //   label: "swaps",

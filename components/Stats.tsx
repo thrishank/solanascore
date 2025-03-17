@@ -26,7 +26,7 @@ export default function Stats() {
 
   async function fetchData() {
     try {
-      const res = await fetch(`/api?address=${address[0]}`);
+      const res = await fetch(`/api?address=${address}`);
       const responseData = await res.json();
 
       if (res.status === 202 || res.status === 203) {
@@ -197,7 +197,6 @@ export default function Stats() {
             </div>
           )}
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
           {stats_data(data!).map((item, index) => (
             <Card key={index}>
