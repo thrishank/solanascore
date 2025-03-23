@@ -61,15 +61,13 @@ export async function GET(req: Request) {
 
     const processedData = await processAddress(addr);
     if (processedData) {
-      data.score += processedData.score;
+      if (data.score < processedData.score) data.score = processedData.score;
       data.fee += processedData.fee;
       data.totaltx += processedData.totaltx;
       data.stats = addStreakAnalysis(data.stats, processedData.stats);
       data.programIdCountMap.push(...processedData.programIdCountMap);
     }
   }
-
-  data.score = parseInt((data.score / address.length).toString());
 
   return NextResponse.json(data, { status: 200 });
 

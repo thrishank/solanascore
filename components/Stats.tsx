@@ -8,6 +8,7 @@ import { stats_data } from "@/lib/data";
 import { Card, CardContent } from "./ui/card";
 import { formatDate } from "@/lib/fn";
 import StatsLoader from "./Loader";
+import { toast } from "@/hooks/use-toast";
 
 export default function Stats() {
   const [data, setData] = useState<ResponseData>();
@@ -163,15 +164,27 @@ export default function Stats() {
                 <User className="h-6 w-6 sm:h-7 sm:w-7 text-gray-500" />
               </Avatar>
               <div className="text-sm sm:text-base">
-                <span
-                  className="font-medium cursor-pointer"
-                  onClick={() => {
-                    navigator.clipboard.writeText(address[0]);
-                  }}
-                >
-                  {address[0].slice(0, 4) +
-                    "......." +
-                    address[0].slice(address.length - 5)}
+                <span className="font-medium cursor-pointer flex">
+                  {address.map((addr, i) => {
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => {
+                          navigator.clipboard.writeText(addr);
+                          toast({
+                            title: "Address copied",
+                            duration: 2000,
+                            description: addr,
+                          });
+                        }}
+                      >
+                        {addr.slice(0, 4) +
+                          "...." +
+                          addr.slice(address.length - 5) +
+                          (i < address.length - 1 ? " , " : "")}
+                      </div>
+                    );
+                  })}
                 </span>
               </div>
             </div>
