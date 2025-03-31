@@ -20,7 +20,7 @@ export function countProgramIds(inputs: Input[]): ProgramIdDetailedCount[] {
   const overallProgramCountMap = new Map<string, number>();
 
   inputs.forEach((input) => {
-    const date = new Date(input.time * 1000);
+    const date = new Date(input.time / 1000);
     const monthKey = date.getMonth() + 1;
 
     input.programId.forEach((programId) => {

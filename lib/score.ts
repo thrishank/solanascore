@@ -11,10 +11,10 @@ export default function onchainScore(
   domains: boolean,
 ) {
   let score = 0;
-  score += days_score(stats, txCount); // 50 new 10
-  // score += programs_score(programIdCountMap); // 35
-  score += token_score(tokens); // 10 new 20
-  if (domains) score += 5; // 5 new 5
+  score += days_score(stats, txCount); // 50
+  score += programs_score(programIdCountMap); // 20
+  score += token_score(tokens); //  20
+  if (domains) score += 10; // 10
   return score;
 }
 
@@ -42,10 +42,7 @@ function programs_score(program_data: ProgramIdDetailedCount[]): number {
     programScore.jupiter +
     programScore.tensor +
     programScore.squads +
-    programScore.metaplex +
-    programScore.token +
-    programScore.swap +
-    programScore.stake;
+    programScore.metaplex;
 
   console.log("Program Score: ", programScore);
   return score;
@@ -130,7 +127,7 @@ function token_score(tokens: RawAccount[]): number {
     )
       stable_coin_check = true;
   }
-  if (lst_check) score += 5;
-  if (stable_coin_check) score += 5;
+  if (lst_check) score += 10;
+  if (stable_coin_check) score += 10;
   return score;
 }

@@ -51,6 +51,7 @@ export async function GET(req: Request) {
         address: addr,
       },
     });
+    /* 
     if (db) {
       data.score += db.score;
       data.fee += Number(db.fee);
@@ -58,6 +59,7 @@ export async function GET(req: Request) {
       data.stats = addStreakAnalysis(data.stats, JSON.parse(db.stats));
       data.programIdCountMap.push(JSON.parse(db.programId));
     }
+    */
 
     const processedData = await processAddress(addr);
     if (processedData) {
@@ -99,16 +101,16 @@ export async function GET(req: Request) {
 
 async function processAddress(address: string) {
   try {
-    const tokensPromise = getTokens(address);
-    const domainsPromise = getDomains(address);
+    const domainsPromise = await getDomains(address);
 
-    const txDataArray = await getTransactionDune(address);
-    const txData = txDataArray.flat();
+    const tokensPromise = getTokens(address);
 
     const [tokens, domains] = await Promise.all([
       tokensPromise,
       domainsPromise,
     ]);
+    const txDataArray = await getTransactionDune(address);
+    const txData = txDataArray.flat();
 
     const timestamp = txData.map((item) => item.time);
     const stats = analyzeTransactionStreaks(timestamp);

@@ -189,7 +189,6 @@ export function stats_data(data: ResponseData) {
       suffix: " on",
       startDate: new Date(getMostTransactionsData(data?.stats?.dayCount!).date),
     },
-    /* 
     {
       emoji: "🪙",
       label: "transfer",
@@ -238,26 +237,27 @@ export function stats_data(data: ResponseData) {
       ),
       suffix: " ",
     },
+    /* 
+    {
+      emoji: "🔄",
+      label: "swaps",
+      text: "Jupiter Interactions  ",
+      value:
+        getProgramCount(
+          data?.programIdCountMap!,
+          popular_program_id["jupiter"][0],
+        ) +
+        getProgramCount(
+          data?.programIdCountMap!,
+          popular_program_id["jupiter"][1],
+        ) +
+        getProgramCount(
+          data?.programIdCountMap!,
+          popular_program_id["jupiter"][2],
+        ),
+      suffix: " ",
+    },
     */
-    // {
-    //   emoji: "🔄",
-    //   label: "swaps",
-    //   text: "Jupiter Interactions  ",
-    //   value:
-    //     getProgramCount(
-    //       data?.programIdCountMap!,
-    //       popular_program_id["jupiter"][0]
-    //     ) +
-    //     getProgramCount(
-    //       data?.programIdCountMap!,
-    //       popular_program_id["jupiter"][1]
-    //     ) +
-    //     getProgramCount(
-    //       data?.programIdCountMap!,
-    //       popular_program_id["jupiter"][2]
-    //     ),
-    //   suffix: " ",
-    // },
     // {
     //   emoji: "🔄",
     //   label: "squads",

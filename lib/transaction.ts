@@ -76,11 +76,23 @@ export async function getTransactionDune(address: string) {
   const data = [];
   let loop = true;
   let offset = undefined;
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
   while (loop) {
     const dune_data = await dune(address, offset);
     if (dune_data.transactions) {
-      data.push(...dune_data.transactions);
+      for (const transaction of dune_data.transactions) {
+        const transactionDate = new Date(transaction.block_time / 1000);
+        if (transactionDate >= oneYearAgo) {
+          data.push(transaction);
+        } else {
+          loop = false;
+          break;
+        }
+      }
+
+      if (!loop) break;
     }
 
     offset = dune_data.next_offset;
@@ -103,11 +115,9 @@ async function dune(address: string, offset?: string) {
     method: "GET",
     headers: { "X-Dune-Api-Key": "i3Ko8OSHBL1GVVNMT6zv1RBOGUEwf0a0" },
   };
-
   const url = offset
     ? `https://api.dune.com/api/echo/beta/transactions/svm/${address}?limit=2000&offset=${offset}`
     : `https://api.dune.com/api/echo/beta/transactions/svm/${address}?limit=2000`;
-
   const res = await fetch(url, options);
   const data = await res.json();
   return data;
