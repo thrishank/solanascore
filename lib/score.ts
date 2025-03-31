@@ -12,6 +12,7 @@ export default function onchainScore(
 ) {
   let score = 0;
   score += days_score(stats, txCount); // 50
+  console.log("Days Score: ", score);
   score += programs_score(programIdCountMap); // 20
   score += token_score(tokens); //  20
   if (domains) score += 10; // 10

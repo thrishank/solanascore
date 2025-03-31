@@ -54,11 +54,6 @@ const StatsLoader: React.FC<LoaderProps> = ({
               className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-500"
             />
           </div>
-          <div className="text-sm text-gray-600 text-center">
-            <p>
-              Processing {processedCount} of {totalSignatures} transactions
-            </p>
-          </div>
         </div>
       </div>
     );
@@ -78,7 +73,7 @@ const StatsLoader: React.FC<LoaderProps> = ({
             ) : queueinfo.position === 1 ? (
               <>
                 Your request is being processed. Progress below:
-                {renderProgress()}
+                {/* {renderProgress()} */}
               </>
             ) : (
               "Fetching data..."
@@ -89,7 +84,7 @@ const StatsLoader: React.FC<LoaderProps> = ({
         <>
           <div className="loader animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500" />
           <p className="text-lg font-medium animate-pulse">Loading data...</p>
-          {renderProgress()}
+          {/* {renderProgress()} */}
         </>
       )}
     </div>

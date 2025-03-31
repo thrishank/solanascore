@@ -35,7 +35,7 @@ export default function Stats() {
         setQueueInfo({
           length: responseData.length,
           position: responseData.position,
-          message: responseData.message,
+          message: "",
         });
         if (prevLength.current !== responseData.signatures) {
           setLength(responseData.signatures);
@@ -266,7 +266,7 @@ export default function Stats() {
               href="https://twitter.com/3thris"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold"
+              className="font-semibold underline"
             >
               @3thris
             </a>

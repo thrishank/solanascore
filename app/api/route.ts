@@ -51,7 +51,7 @@ export async function GET(req: Request) {
         address: addr,
       },
     });
-    /* 
+
     if (db) {
       data.score += db.score;
       data.fee += Number(db.fee);
@@ -59,8 +59,6 @@ export async function GET(req: Request) {
       data.stats = addStreakAnalysis(data.stats, JSON.parse(db.stats));
       data.programIdCountMap.push(JSON.parse(db.programId));
     }
-    */
-
     const processedData = await processAddress(addr);
     if (processedData) {
       if (data.score < processedData.score) data.score = processedData.score;
