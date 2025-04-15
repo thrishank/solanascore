@@ -46,19 +46,19 @@ export async function GET(req: Request) {
   };
 
   for (const addr of address) {
-    const db = await prisma.walletData.findUnique({
-      where: {
-        address: addr,
-      },
-    });
-
-    if (db) {
-      data.score += db.score;
-      data.fee += Number(db.fee);
-      data.totaltx += db.totalTransactions;
-      data.stats = addStreakAnalysis(data.stats, JSON.parse(db.stats));
-      data.programIdCountMap.push(JSON.parse(db.programId));
-    }
+    // const db = await prisma.walletData.findUnique({
+    //   where: {
+    //     address: addr,
+    //   },
+    // });
+    //
+    // if (db) {
+    //   data.score += db.score;
+    //   data.fee += Number(db.fee);
+    //   data.totaltx += db.totalTransactions;
+    //   data.stats = addStreakAnalysis(data.stats, JSON.parse(db.stats));
+    //   data.programIdCountMap.push(JSON.parse(db.programId));
+    // }
     const processedData = await processAddress(addr);
     if (processedData) {
       if (data.score < processedData.score) data.score = processedData.score;
