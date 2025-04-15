@@ -27,12 +27,22 @@ export default function Hero() {
     for (const addr of addresses) {
       try {
         if (addr.includes(".sol")) {
-          const wallet = await getWallet(addr);
-          if (wallet) {
-            setAddress([wallet]);
-            setShowDashboard(true);
-            return;
-          } else {
+          try {
+            const wallet = await getWallet(addr);
+            if (wallet) {
+              setAddress([wallet]);
+              setShowDashboard(true);
+              return;
+            } else {
+              toast({
+                title: "Domain Not Found",
+                duration: 4000,
+                description: `The domain ${addr} does not exist.`,
+                className: "bg-red-500",
+              });
+              return;
+            }
+          } catch (error) {
             toast({
               title: "Domain Not Found",
               duration: 4000,

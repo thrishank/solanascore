@@ -15,7 +15,7 @@ export async function getDomains(wallet: string): Promise<boolean> {
     allDomainKeys.map(async (key) => {
       await reverseLookup(provider, key);
       return true;
-    })
+    }),
   ).catch(() => false);
 
   console.log(`${wallet} owns at least one SNS domain: ${hasDomain}`);
@@ -23,6 +23,11 @@ export async function getDomains(wallet: string): Promise<boolean> {
 }
 
 export async function getWallet(domain: string): Promise<string | null> {
-  const wallet = await resolve(provider, domain);
-  return wallet.toString();
+  try {
+    const wallet = await resolve(provider, domain);
+    return wallet.toString();
+  } catch (err) {
+    console.error(err);
+    throw new Error("Domain not found");
+  }
 }

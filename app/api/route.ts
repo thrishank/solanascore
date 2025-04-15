@@ -134,8 +134,7 @@ async function processAddress(address: string) {
       domains,
     );
 
-    /* 
-    await primsa.walletData.upsert({
+    await prisma.walletData.upsert({
       where: { address: address },
       update: {
         score: score,
@@ -163,7 +162,6 @@ async function processAddress(address: string) {
         hasDomain: domains,
       },
     });
-    */
 
     const responseData: ResponseData = {
       score,
