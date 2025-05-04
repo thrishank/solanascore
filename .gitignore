@@ -35,9 +35,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
- 
-sol
-sol.pub
 public/uploads
-todo

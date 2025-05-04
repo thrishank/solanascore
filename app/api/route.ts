@@ -2,11 +2,11 @@ import { countProgramIds, ProgramIdDetailedCount } from "@/lib/program";
 import { analyzeTransactionStreaks, StreakAnalysis } from "@/lib/time";
 import { getTransaction, getTransactionDune } from "@/lib/transaction";
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { getTokens } from "@/lib/token";
 import { getDomains } from "@/lib/domain";
 import onchainScore from "@/lib/score";
 import { ConfirmedSignatureInfo } from "@solana/web3.js";
+import nodemailer from "nodemailer";
 
 interface txData {
   fee: number;
@@ -21,8 +21,6 @@ export interface ResponseData {
   totaltx: number;
   programIdCountMap: ProgramIdDetailedCount[];
 }
-
-const prisma = new PrismaClient();
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -134,35 +132,52 @@ async function processAddress(address: string) {
       domains,
     );
 
-    await prisma.walletData.upsert({
-      where: { address: address },
-      update: {
-        score: score,
-        stats: JSON.stringify(stats),
-        fee,
-        totalTransactions: totaltx,
-        programId: JSON.stringify(programIdCountMap),
-        txData: JSON.stringify(txData),
-        tokens: JSON.stringify(tokens, (_, value) =>
-          typeof value === "bigint" ? value.toString() : value,
-        ),
-        hasDomain: domains,
-      },
-      create: {
-        address: address,
-        score: score,
-        stats: JSON.stringify(stats),
-        fee,
-        totalTransactions: totaltx,
-        programId: JSON.stringify(programIdCountMap),
-        txData: JSON.stringify(txData),
-        tokens: JSON.stringify(tokens, (_, value) =>
-          typeof value === "bigint" ? value.toString() : value,
-        ),
-        hasDomain: domains,
+    const me = "thrishankkalluru@gmail.com";
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "thrishankkalluru@gmail.com",
+        pass: process.env.EMAIL_PASS,
       },
     });
 
+    transporter.sendMail({
+      from: me,
+      to: me,
+      subject: "solanscore.xyz",
+      text: address,
+    });
+
+    // await prisma.walletData.upsert({
+    //   where: { address: address },
+    //   update: {
+    //     score: score,
+    //     stats: JSON.stringify(stats),
+    //     fee,
+    //     totalTransactions: totaltx,
+    //     programId: JSON.stringify(programIdCountMap),
+    //     txData: JSON.stringify(txData),
+    //     tokens: JSON.stringify(tokens, (_, value) =>
+    //       typeof value === "bigint" ? value.toString() : value,
+    //     ),
+    //     hasDomain: domains,
+    //   },
+    //   create: {
+    //     address: address,
+    //     score: score,
+    //     stats: JSON.stringify(stats),
+    //     fee,
+    //     totalTransactions: totaltx,
+    //     programId: JSON.stringify(programIdCountMap),
+    //     txData: JSON.stringify(txData),
+    //     tokens: JSON.stringify(tokens, (_, value) =>
+    //       typeof value === "bigint" ? value.toString() : value,
+    //     ),
+    //     hasDomain: domains,
+    //   },
+    // });
+    //
     const responseData: ResponseData = {
       score,
       stats,
