@@ -6,7 +6,6 @@ import { getTokens } from "@/lib/token";
 import { getDomains } from "@/lib/domain";
 import onchainScore from "@/lib/score";
 import { ConfirmedSignatureInfo } from "@solana/web3.js";
-import nodemailer from "nodemailer";
 
 interface txData {
   fee: number;
@@ -131,23 +130,6 @@ async function processAddress(address: string) {
       tokens,
       domains,
     );
-
-    const me = "thrishankkalluru@gmail.com";
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "thrishankkalluru@gmail.com",
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    transporter.sendMail({
-      from: me,
-      to: me,
-      subject: "solanscore.xyz",
-      text: address,
-    });
 
     // await prisma.walletData.upsert({
     //   where: { address: address },
