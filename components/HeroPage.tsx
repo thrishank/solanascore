@@ -100,7 +100,7 @@ export default function Hero() {
             {Array.from({ length: 3 }).map((_, index) => (
               <Input
                 key={index}
-                placeholder="toly.sol, 372a......vq9j"
+                placeholder={index === 0 ? "toly.sol" : "372a......vq9j"}
                 className="h-12 text-base sm:text-lg"
                 value={address[index] || ""}
                 onChange={(e) => handleInputChange(index, e.target.value)}

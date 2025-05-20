@@ -21,6 +21,7 @@ export default function SolanaAnalytics() {
     }
     if (disconnecting) {
       setShowDashboard(false);
+      setAddress([]);
     }
   }, [connected, disconnecting]);
 

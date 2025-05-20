@@ -15,8 +15,29 @@ export default function onchainScore(
   console.log("Days Score: ", score);
   score += programs_score(programIdCountMap); // 20
   score += token_score(tokens); //  20
-  if (domains) score += 10; // 10
+  const cnft_interacted = check(
+    "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
+    programIdCountMap,
+  );
+
+  if (cnft_interacted) score += 10; // 5
+  if (domains) score += 10; // 5
   return score;
+}
+
+function check(
+  address: string,
+  program_data: ProgramIdDetailedCount[],
+): boolean {
+  program_data.map((program) => {
+    if (program.programId === address) {
+      if (program.overallCount > 0) {
+        return true;
+      }
+    }
+  });
+
+  return false;
 }
 
 function programs_score(program_data: ProgramIdDetailedCount[]): number {
